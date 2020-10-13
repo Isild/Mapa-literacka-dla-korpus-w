@@ -1,1 +1,1 @@
-# Mapa-literacka-dla-korpus-w
+# Mapa-literacka-dla-korpusów
