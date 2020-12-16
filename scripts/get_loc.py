@@ -22,7 +22,7 @@ Mariusz jedzie autem Mariuszem do Mariuszowa."
 def main():
     # Get analyzed XML
     info = getTextInf(text)
-    get_location(info)
+    json = get_location(info)
 
 def getTextInf(textToSend):
     payload = {'text': textToSend, 'lpmn': lpmn, 'user': user_mail}
@@ -46,7 +46,6 @@ def getTextInf(textToSend):
                     location_dict["time"] = 0      # TODO: assign proper value
                     loc_ann.append(location_dict)
                     id_num += 1
-                    print(location_dict)
 
     return loc_ann
 
@@ -56,20 +55,16 @@ def get_location(info):
 
     for line in info:
         loc = line["name"]
-        print("loc: {}".format(loc))
 
         location = geolocator.geocode(loc)
-        print("final location: {}".format(location))
-        print("final location: lat:{} long:{}".format(location.latitude, location.longitude))
         line["coords"] = {
                 "lat" : location.latitude,
                 "lng" : location.longitude
                 }
 
-    print(info)
-
     loc_json = json.dumps(info)
-    print(loc_json)
+
+    return loc_json
 
 
 if __name__ == "__main__":
