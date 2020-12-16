@@ -6,7 +6,7 @@
           v-model="inputUrl"
           label="Link do testowania"
         ></v-text-field>
-        <v-btn @click="showLongText">
+        <v-btn @click="getData">
           Get data
         </v-btn>
         <v-btn @click="showMap = !showMap">
@@ -21,12 +21,9 @@
             ref="myMap"
             @ready="onReady()"
             v-if="showMap"
-            :zoom="zoom"
-            :center="center"
             :options="mapOptions"
             style="height: 80%"
             @update:center="centerUpdate"
-            @update:zoom="zoomUpdate"
           >
             <l-tile-layer :url="url" :attribution="attribution" />
             <v-marker-cluster>
@@ -66,16 +63,12 @@ export default {
   },
   data() {
     return {
-      zoom: 2,
       center: latLng(47.41322, -1.219482),
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-      currentZoom: 11.5,
-      currentCenter: latLng(47.41322, -1.219482),
-      showParagraph: false,
       mapOptions: {
-        zoomSnap: 0.5
+        zoomSnap: 1
       },
       showMap: true,
       markers: null,
@@ -88,28 +81,18 @@ export default {
     onReady() {
       // Map object is not immediately available therefore:
       this.map = this.$refs.myMap.mapObject;
-    },
-    zoomUpdate(zoom) {
-      // this.currentZoom = zoom * 2;
-      this.map.setZoom(zoom);
+      this.map.setZoom(2);
     },
     centerUpdate(center) {
-      this.currentCenter = center;
+      console.clear();
+      console.group("Map bounds and center. Zoom level");
+      console.log(`zoom: ${this.map.getZoom()}`);
+      console.table(this.map.getBounds());
+      console.table(center);
+      console.groupEnd();
     },
-
-    /*
-      Coords generator:
-      [
-        '{{repeat(5000)}}',
-        {lat: '{{integer(-90, 90)}}', lng: '{{integer(-180, 180)}}'}
-      ]
-    */
-    showLongText() {
-      // this.showParagraph = !this.showParagraph;
+    getData() {
       axios.get(this.inputUrl).then(response => (this.markers = response.data));
-    },
-    innerClick() {
-      alert("Click!");
     }
   },
   mounted() {
