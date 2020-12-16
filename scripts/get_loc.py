@@ -19,7 +19,7 @@ Reszta grupy jest nieznana.\
 Mariusz jedzie autem Mariuszem do Mariuszowa."
 
 
-def main():
+def main(text):
     # Get analyzed XML
     info = getTextInf(text)
     json = get_location(info)
@@ -68,4 +68,4 @@ def get_location(info):
 
 
 if __name__ == "__main__":
-    main()
+    main(text)
