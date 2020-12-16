@@ -24,6 +24,8 @@ def main(text):
     info = getTextInf(text)
     json = get_location(info)
 
+    return json
+
 def getTextInf(textToSend):
     payload = {'text': textToSend, 'lpmn': lpmn, 'user': user_mail}
     headers = {'content-type': 'application/json'}
