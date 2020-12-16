@@ -5,6 +5,7 @@ import LoadFile from "../pages/LoadFile";
 import ForceGraph from "../components/ForceGraph";
 import VisualiseData from "../components/VisualiseData";
 import GraphList from "../pages/GraphList";
+import VisualiseLocations from "../pages/VisualiseLocations";
 
 Vue.use(Router);
 
@@ -27,6 +28,12 @@ export default new Router({
       path: "/visualise-data/:id",
       name: "VisualiseData",
       component: VisualiseData,
+      props: true
+    },
+    {
+      path: "/visualise-locations/:id",
+      name: "VisualiseLocations",
+      component: VisualiseLocations,
       props: true
     },
     {
