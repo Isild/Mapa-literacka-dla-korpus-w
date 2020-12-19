@@ -15,16 +15,12 @@
           <div v-else>W trakcie analizy</div>
         </td>
         <td class="text-center">
-          <div v-if="item[2] === 1">
-            <v-btn color="primary" :to="'/visualise-data/' + item[0]"
-              >Przejdź</v-btn
-            >
-          </div>
-          <div v-else>
-            <v-btn disabled color="primary" :to="'/visualise-data/' + item[0]"
-              >Przejdź</v-btn
-            >
-          </div>
+          <v-btn
+            :disabled="!item[2]"
+            color="primary"
+            :to="{ name: 'VisualiseLocations', params: { id: item[0] } }"
+            >Przejdź</v-btn
+          >
         </td>
       </tr>
     </table>

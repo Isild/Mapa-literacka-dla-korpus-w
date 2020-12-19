@@ -1,9 +1,9 @@
 from flask.views import MethodView
-from app.services.text_analyse import main
-from flask import request
+from app.services.text_analyse import analyze_text
+from flask import request, abort
 from app.services.db import db
 from app.models.literary_map import LiteraryMap
-
+import json
 
 class TextAnalyze(MethodView):
     def post(self):
@@ -14,15 +14,14 @@ class TextAnalyze(MethodView):
         db.session.add(lm)
         db.session.commit()
 
-        main(dataFromJson['text'])
+        analyze_text(dataFromJson['text'], lm.id)
         return str(lm.id)
 
     def get(self):
-        lmID = request.args.get('id')
-        lm = LiteraryMap.query.filter_by(id=lmID).first()
+        lm_id = request.args.get('id')
+        lm = LiteraryMap.query.filter_by(id=lm_id).first()
 
-        if lm.ready:
-            json = lm.toJSON()
-            return '{"status":"ready", "literaryMap":' + str(json) + '}'
+        if lm is not None:
+                return lm.toJSON()
         else:
-            return '{"status":"analyzing"}'
+            return abort(404)

@@ -6,7 +6,7 @@
           v-model="inputUrl"
           label="Link do testowania"
         ></v-text-field>
-        <v-btn @click="getData">
+        <v-btn @click="getDataFromUrl">
           Get data
         </v-btn>
         <v-btn @click="showMap = !showMap">
@@ -53,7 +53,7 @@ import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
 import axios from "axios";
 
 export default {
-  name: "Example",
+  name: "VisualiseLocations",
   components: {
     LMap,
     LTileLayer,
@@ -70,9 +70,11 @@ export default {
       mapOptions: {
         zoomSnap: 1
       },
+      literalMapData: {},
       showMap: true,
       markers: null,
       map: null,
+      id: 0,
       inputUrl:
         "https://gist.githubusercontent.com/DawidPiechota/58e754ed0ab6e0e05a27eeb421fd98b1/raw/6878d98e1dc87ccfc93ac45b7b6d9aa6faf0ec8d/locations.json"
     };
@@ -82,6 +84,10 @@ export default {
       // Map object is not immediately available therefore:
       this.map = this.$refs.myMap.mapObject;
       this.map.setZoom(2);
+      this.id = this.$route.params.id;
+      if (this.id !== 0) {
+        this.getDataFromServer();
+      }
     },
     centerUpdate(center) {
       console.clear();
@@ -91,8 +97,24 @@ export default {
       console.table(center);
       console.groupEnd();
     },
-    getData() {
+    getDataFromUrl() {
       axios.get(this.inputUrl).then(response => (this.markers = response.data));
+    },
+    getDataFromServer() {
+      axios
+        .get("http://127.0.0.1:5000/processText", { params: { id: this.id } })
+        .then(response => {
+          this.literalMapData = response.data;
+          if (this.literalMapData.status !== "ready") {
+            this.$router.push({ name: "GraphList" });
+          }
+          this.markers = { ...this.literalMapData.nodesData };
+        })
+        .catch(err => {
+          if (err.response.status === 404) {
+            this.$router.push({ name: "GraphList" });
+          }
+        });
     }
   },
   mounted() {

@@ -7,6 +7,7 @@ db = SQLAlchemy(app)
 # This line breaks flake8 lint and needs to be no-linted. Maybe it is possible
 # to write it diffrently, but even the official example from SQLAlchemy needs
 # to be no-linted.
-from app.models.literary_map import LiteraryMap  # noqa: F401, E402
 
-db.create_all()
+def init_db():
+    from app.models.literary_map import LiteraryMap  # noqa: F401, E402
+    db.create_all()

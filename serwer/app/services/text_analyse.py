@@ -1,7 +1,10 @@
 import requests
 import json
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
 from geopy.geocoders import Nominatim
+from app.models.literary_map import LiteraryMap
+from app.services.db import db
+
 
 clarinpl_url = "http://ws.clarin-pl.eu/nlprest2/base"
 url = clarinpl_url + "/process"
@@ -20,16 +23,21 @@ Mariusz jedzie autem Mariuszem do Mariuszowa.\
 Z Wołowa do Wrocławia jednym pociągiem, polecam Paweł, kolekcja klasyki z Polski."
 
 
-def main(text):
+def analyze_text(text_to_analyze, lm_id):
     # Get analyzed XML
-    info = getTextInf(text)
-    json = get_location(info)
+    info = getTextInf(text_to_analyze, lm_id)
+    return_json = get_location(info)
 
-    return json
+    lm_obj = LiteraryMap.query.filter(LiteraryMap.id == lm_id).first()
+    lm_obj.ready = 1
+    lm_obj.nodesData = json.loads(return_json)
+    db.session.commit()
+
+    return return_json
 
 
-def getTextInf(textToSend):
-    payload = {'text': textToSend, 'lpmn': lpmn, 'user': user_mail}
+def getTextInf(text_to_send, lm_id):
+    payload = {'text': text_to_send, 'lpmn': lpmn, 'user': user_mail}
     headers = {'content-type': 'application/json'}
     r = requests.post(url, data=json.dumps(payload), headers=headers)
 
@@ -37,7 +45,7 @@ def getTextInf(textToSend):
     id_num = 0
 
     loc_ann = []
-    tree = ET.fromstring(ccl)
+    tree = Et.fromstring(ccl)
     previousStr = ''
     sentenceIt = 1
     for tok in tree.iter("tok"):

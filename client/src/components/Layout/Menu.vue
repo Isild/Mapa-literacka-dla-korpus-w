@@ -8,7 +8,7 @@
           >
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link :to="`/visualise-locations/0`">
+      <v-list-item link :to="{ name: 'VisualiseLocations', params: { id: 0 } }">
         <v-list-item-content>
           <v-list-item-title class="text-center"
             >Wyświetl mapę</v-list-item-title
