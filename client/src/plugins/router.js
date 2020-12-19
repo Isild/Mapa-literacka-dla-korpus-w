@@ -2,8 +2,6 @@ import Vue from "vue";
 import Router from "vue-router";
 import Home from "../pages/Home";
 import LoadFile from "../pages/LoadFile";
-import ForceGraph from "../components/ForceGraph";
-import VisualiseData from "../components/VisualiseData";
 import GraphList from "../pages/GraphList";
 import VisualiseLocations from "../pages/VisualiseLocations";
 
@@ -16,19 +14,6 @@ export default new Router({
       path: "/",
       name: "Home",
       component: Home
-    },
-
-    {
-      path: "/force-graph",
-      name: "ForceGraph",
-      component: ForceGraph
-    },
-
-    {
-      path: "/visualise-data/:id",
-      name: "VisualiseData",
-      component: VisualiseData,
-      props: true
     },
     {
       path: "/visualise-locations/:id",

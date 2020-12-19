@@ -3,7 +3,7 @@
     <v-app-bar-nav-icon @click.stop="changeDrawer"></v-app-bar-nav-icon>
     <v-toolbar-title>
       <router-link to="/" class="toolbar-title" exact>
-        Relacje pomiędzy bytami w tekstach literackich
+        Mapa literacka
       </router-link>
     </v-toolbar-title>
   </v-app-bar>

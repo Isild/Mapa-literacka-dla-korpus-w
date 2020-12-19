@@ -8,25 +8,23 @@
           >
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link :to="`/visualise-data/0`">
+      <v-list-item link :to="`/visualise-locations/0`">
         <v-list-item-content>
           <v-list-item-title class="text-center"
-            >Wizualizacja Grafu</v-list-item-title
+            >Wyświetl mapę</v-list-item-title
           >
         </v-list-item-content>
       </v-list-item>
       <v-list-item link to="/load-file">
         <v-list-item-content>
           <v-list-item-title class="text-center"
-            >Załaduj Tekst</v-list-item-title
+            >Załaduj Plik</v-list-item-title
           >
         </v-list-item-content>
       </v-list-item>
       <v-list-item link to="/graph-list">
         <v-list-item-content>
-          <v-list-item-title class="text-center"
-            >Lista Grafów</v-list-item-title
-          >
+          <v-list-item-title class="text-center">Lista Map</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
     </v-list>

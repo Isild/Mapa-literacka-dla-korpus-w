@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask import json
-from app.models.literaryMap import LiteraryMap
+from app.models.literary_map import LiteraryMap
 
 
 class LiteraryMaps(MethodView):

@@ -1,11 +1,11 @@
 from flask.views import MethodView
-from app.services.textAnalyse import main
+from app.services.text_analyse import main
 from flask import request
 from app.services.db import db
-from app.models.literaryMap import LiteraryMap
+from app.models.literary_map import LiteraryMap
 
 
-class Algorithm(MethodView):
+class TextAnalyze(MethodView):
     def post(self):
         dataFromJson = request.get_json()
         n = dataFromJson['name']
@@ -14,7 +14,7 @@ class Algorithm(MethodView):
         db.session.add(lm)
         db.session.commit()
 
-        main(dataFromJson['text'], lm.id)
+        main(dataFromJson['text'])
         return str(lm.id)
 
     def get(self):

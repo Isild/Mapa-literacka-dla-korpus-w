@@ -159,7 +159,7 @@ export default {
       this.isErrorResponse = false;
       return axios
         .post(
-          "http://127.0.0.1:5000/methodOne",
+          "http://127.0.0.1:5000/processText",
           { name: this.textName, text: this.text },
           {
             headers: {

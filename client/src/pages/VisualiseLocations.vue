@@ -16,7 +16,7 @@
     </v-row>
     <v-row align="center" justify="center">
       <v-col cols="10">
-        <div style="height: 800px; width 800px">
+        <div style="height: 800px; width: 800px">
           <l-map
             ref="myMap"
             @ready="onReady()"
