@@ -16,7 +16,8 @@ Przemek pisze kolokwium z Wojtkiem w Chałupach.\
 Bartosz zrobił już coś, żartowałem nie ma go na ziemii.\
 Np. Bartosz zna się tylko z Pawłem w Karkonoszach.\
 Reszta grupy jest nieznana.\
-Mariusz jedzie autem Mariuszem do Mariuszowa."
+Mariusz jedzie autem Mariuszem do Mariuszowa.\
+Z Wołowa do Wrocławia jednym pociągiem, polecam Paweł, kolekcja klasyki z Polski."
 
 
 def main(text):
@@ -25,6 +26,7 @@ def main(text):
     json = get_location(info)
 
     return json
+
 
 def getTextInf(textToSend):
     payload = {'text': textToSend, 'lpmn': lpmn, 'user': user_mail}
@@ -36,19 +38,28 @@ def getTextInf(textToSend):
 
     loc_ann = []
     tree = ET.fromstring(ccl)
+    previousStr = ''
+    sentenceIt = 1
     for tok in tree.iter("tok"):
         location_dict = {}
         annot = tok.findall('ann')
         for ann in annot:
             if (ann is not None):
+                lexBase = tok.find('./lex/base')
+                if (previousStr != '.' and lexBase.text == '.'):
+                    sentenceIt = sentenceIt + 1
                 ann_attr = ann.attrib
                 if (ann_attr["chan"] == "nam_loc" and "head" in ann_attr):
                     location_dict["id"] = id_num
-                    location_dict["name"] = tok.find('./lex/base').text
-                    location_dict["time"] = 0      # TODO: assign proper value
+                    location_dict["name"] = lexBase.text
+                    location_dict["time"] = sentenceIt
                     loc_ann.append(location_dict)
                     id_num += 1
 
+                if (lexBase.text != '.'):
+                    previousStr = 'c'
+                else:
+                    previousStr = lexBase.text
     return loc_ann
 
 
@@ -60,9 +71,9 @@ def get_location(info):
 
         location = geolocator.geocode(loc)
         line["coords"] = {
-                "lat" : location.latitude,
-                "lng" : location.longitude
-                }
+            "lat": location.latitude,
+            "lng": location.longitude
+        }
 
     loc_json = json.dumps(info)
 
