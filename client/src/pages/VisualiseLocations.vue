@@ -131,13 +131,13 @@ export default {
         .then(response => {
           this.literalMapData = response.data;
           if (this.literalMapData.status !== "ready") {
-            this.$router.push({ name: "GraphList" });
+            this.$router.push({ name: "MapsList" });
           }
           this.markers = { ...this.literalMapData.nodesData };
         })
         .catch(err => {
           if (err.response.status === 404) {
-            this.$router.push({ name: "GraphList" });
+            this.$router.push({ name: "MapsList" });
           }
         });
     }

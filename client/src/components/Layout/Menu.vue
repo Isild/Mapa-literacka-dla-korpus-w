@@ -22,7 +22,7 @@
           >
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link to="/graph-list">
+      <v-list-item link :to="{ name: 'MapsList' }">
         <v-list-item-content>
           <v-list-item-title class="text-center">Lista Map</v-list-item-title>
         </v-list-item-content>

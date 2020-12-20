@@ -2,7 +2,7 @@ import Vue from "vue";
 import Router from "vue-router";
 import Home from "../pages/Home";
 import LoadFile from "../pages/LoadFile";
-import GraphList from "../pages/GraphList";
+import MapsList from "../pages/MapsList";
 import VisualiseLocations from "../pages/VisualiseLocations";
 
 Vue.use(Router);
@@ -27,9 +27,9 @@ export default new Router({
       component: LoadFile
     },
     {
-      path: "/graph-list",
-      name: "GraphList",
-      component: GraphList
+      path: "/maps-list",
+      name: "MapsList",
+      component: MapsList
     }
   ]
 });
