@@ -27,7 +27,7 @@
             <l-tile-layer :url="url" :attribution="attribution" />
             <v-marker-cluster>
               <l-marker
-                v-for="marker in markers"
+                v-for="marker of markers"
                 v-bind:key="marker.id"
                 :lat-lng="marker.coords"
               >
@@ -133,7 +133,7 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "GraphList" });
           }
-          this.markers = { ...this.literalMapData.nodesData };
+          this.markers = [...this.literalMapData.nodesData];
         })
         .catch(err => {
           if (err.response.status === 404) {
