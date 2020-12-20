@@ -75,13 +75,16 @@ def get_location(info):
     geolocator = Nominatim(user_agent="map")
 
     for line in info:
-        loc = line["name"]
+        try:
+            loc = line["name"]
 
-        location = geolocator.geocode(loc)
-        line["coords"] = {
-            "lat": location.latitude,
-            "lng": location.longitude
-        }
+            location = geolocator.geocode(loc)
+            line["coords"] = {
+                "lat": location.latitude,
+                "lng": location.longitude
+            }
+        except:
+            print(line)
 
     loc_json = json.dumps(info)
 
