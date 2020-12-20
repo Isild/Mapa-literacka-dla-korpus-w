@@ -207,9 +207,9 @@ export default {
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
     },
-    changeLocationBtn(a) {
-      console.log(a);
-      if (a === "prev") {
+    changeLocationBtn(direction) {
+      console.log(direction);
+      if (direction === "prev") {
         this.timelineSliderValue--;
       } else {
         this.timelineSliderValue++;
