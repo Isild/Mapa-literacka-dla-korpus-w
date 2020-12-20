@@ -1,22 +1,21 @@
 <template>
   <v-container fill-height fluid>
-    <v-row align="center" justify="center">
+    <v-row style="z-index: 2" align="center" justify="center" class="mt-4">
       <v-col cols="10 " class="text-center">
-        <v-text-field
-          v-model="inputUrl"
-          label="Link do testowania"
-        ></v-text-field>
-        <v-btn @click="getData">
-          Get data
-        </v-btn>
-        <v-btn @click="showMap = !showMap">
-          Toggle map
-        </v-btn>
+        <v-autocomplete
+          v-model="literalMapData.id"
+          :items="literaryMaps"
+          item-text="1"
+          item-value="0"
+          @change="onMapChange"
+          return-object
+          style="z-index: 1"
+        />
       </v-col>
     </v-row>
-    <v-row align="center" justify="center">
+    <v-row style="z-index: 1" align="center" justify="center">
       <v-col cols="10">
-        <div style="height: 800px; width 800px">
+        <div style="height: 800px; width: 800px">
           <l-map
             ref="myMap"
             @ready="onReady()"
@@ -53,7 +52,7 @@ import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
 import axios from "axios";
 
 export default {
-  name: "Example",
+  name: "VisualiseLocations",
   components: {
     LMap,
     LTileLayer,
@@ -70,12 +69,22 @@ export default {
       mapOptions: {
         zoomSnap: 1
       },
+      mapSelectModel: 0,
+      literalMapData: {},
+      literaryMaps: [],
       showMap: true,
       markers: null,
       map: null,
+      id: 0,
       inputUrl:
         "https://gist.githubusercontent.com/DawidPiechota/58e754ed0ab6e0e05a27eeb421fd98b1/raw/6878d98e1dc87ccfc93ac45b7b6d9aa6faf0ec8d/locations.json"
     };
+  },
+  watch: {
+    "$attrs.id": function() {
+      this.id = this.$attrs.id;
+      this.getDataFromServer();
+    }
   },
   methods: {
     onReady() {
@@ -84,16 +93,57 @@ export default {
       this.map.setZoom(2);
     },
     centerUpdate(center) {
-      console.clear();
+      // console.clear();
       console.group("Map bounds and center. Zoom level");
       console.log(`zoom: ${this.map.getZoom()}`);
       console.table(this.map.getBounds());
       console.table(center);
       console.groupEnd();
     },
-    getData() {
-      axios.get(this.inputUrl).then(response => (this.markers = response.data));
+    fetchInitData() {
+      this.id = this.$attrs.id;
+      this.getMapsList();
+      if (this.id !== 0) {
+        this.getDataFromServer();
+      }
+    },
+    onMapChange(event) {
+      this.$router.push({
+        name: "VisualiseLocations",
+        params: { id: event[0] }
+      });
+    },
+    getMapsList() {
+      axios
+        .get("http://127.0.0.1:5000/literaryMaps")
+        .then(response => {
+          this.literaryMaps = response.data.literaryMaps;
+          console.log(response.data.literaryMaps);
+        })
+        .catch(e => {
+          this.errors.push(e);
+        });
+    },
+
+    getDataFromServer() {
+      axios
+        .get("http://127.0.0.1:5000/processText", { params: { id: this.id } })
+        .then(response => {
+          this.literalMapData = response.data;
+          if (this.literalMapData.status !== "ready") {
+            this.$router.push({ name: "GraphList" });
+          }
+          this.markers = { ...this.literalMapData.nodesData };
+        })
+        .catch(err => {
+          if (err.response.status === 404) {
+            this.$router.push({ name: "GraphList" });
+          }
+        });
     }
+  },
+  created() {
+    this.fetchInitData();
   },
   mounted() {
     delete Icon.Default.prototype._getIconUrl;

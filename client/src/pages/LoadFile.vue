@@ -29,7 +29,11 @@
               <p>Numer Twojego zgłoszenia to {{ this.submissionId }}.</p>
               <p>
                 Po przetworzeniu wynik będzie dostępny
-                <router-link :to="`/visualise-data/${this.submissionId}`"
+                <router-link
+                  :to="{
+                    name: 'VisualiseLocations',
+                    params: { id: this.submissionId }
+                  }"
                   >pod tym linkiem</router-link
                 >.
               </p>
@@ -159,7 +163,7 @@ export default {
       this.isErrorResponse = false;
       return axios
         .post(
-          "http://127.0.0.1:5000/methodOne",
+          "http://127.0.0.1:5000/processText",
           { name: this.textName, text: this.text },
           {
             headers: {
@@ -171,7 +175,10 @@ export default {
           this.submissionId = response.data;
           this.isSuccessfulResponse = true;
           this.isLoading = false;
-          this.$router.push("visualise-data/" + this.submissionId);
+          this.$router.push({
+            name: "VisualiseLocations",
+            params: { id: this.submissionId }
+          });
         })
         .catch(error => {
           console.log("error: " + error);
