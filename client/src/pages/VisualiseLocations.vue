@@ -48,6 +48,19 @@
               v-model="timelineSwitch"
               :label="`Oś czasu ${timelineSwitch ? 'włączona' : 'wyłączona'}`"
             ></v-switch>
+            <v-btn
+              @click="changeLocationBtn('prev')"
+              :disabled="!timelineSwitch || timelineSliderValue === 0"
+              >Poprzednia lokacja
+            </v-btn>
+            <v-btn
+              @click="changeLocationBtn('next')"
+              :disabled="
+                !timelineSwitch || timelineSliderValue === timelineSliderMax
+              "
+            >
+              Następna lokacja
+            </v-btn>
             <v-slider
               :max="timelineSliderMax"
               :disabled="!timelineSwitch"
@@ -193,6 +206,14 @@ export default {
       this.map.setView(this.mapMarkers[0].coords);
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
+    },
+    changeLocationBtn(a) {
+      console.log(a);
+      if (a === "prev") {
+        this.timelineSliderValue--;
+      } else {
+        this.timelineSliderValue++;
+      }
     }
   },
   created() {
