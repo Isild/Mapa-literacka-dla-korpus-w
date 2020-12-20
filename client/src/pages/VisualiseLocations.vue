@@ -121,6 +121,7 @@ export default {
   watch: {
     "$attrs.id": function() {
       this.id = this.$attrs.id;
+      this.timelineSwitch = false;
       this.getDataFromServer();
     },
     timelineSwitch: function() {
