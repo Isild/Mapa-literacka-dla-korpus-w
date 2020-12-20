@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar app color="indigo" dark>
+  <v-app-bar style="z-index: 3" app color="indigo" dark>
     <v-app-bar-nav-icon @click.stop="changeDrawer"></v-app-bar-nav-icon>
     <v-toolbar-title>
       <router-link to="/" class="toolbar-title" exact>

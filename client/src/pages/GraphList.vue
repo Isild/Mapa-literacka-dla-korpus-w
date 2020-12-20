@@ -38,13 +38,7 @@ export default {
   },
   created() {
     axios
-
-      .get("http://127.0.0.1:5000/literaryMaps", {
-        headers: {
-          "Content-type": "application/json"
-        }
-      })
-
+      .get("http://127.0.0.1:5000/literaryMaps")
       .then(response => {
         this.literaryMaps = response.data.literaryMaps;
         console.log(response.data.literaryMaps);
