@@ -15,29 +15,64 @@
     </v-row>
     <v-row style="z-index: 1" align="center" justify="center">
       <v-col cols="10">
-        <div style="height: 800px; width: 800px">
+        <div style="height: 600px; width: 800px">
           <l-map
             ref="myMap"
             @ready="onReady()"
             v-if="showMap"
             :options="mapOptions"
-            style="height: 80%"
+            style="height: 100%"
             @update:center="centerUpdate"
           >
             <l-tile-layer :url="url" :attribution="attribution" />
             <v-marker-cluster>
               <l-marker
-                v-for="marker of markers"
-                v-bind:key="marker.id"
-                :lat-lng="marker.coords"
+                v-for="mapMarker of mapMarkers"
+                v-bind:key="mapMarker.id"
+                :lat-lng="mapMarker.coords"
               >
                 <l-popup
-                  :content="JSON.stringify(marker, null, '\n')"
+                  :content="JSON.stringify(mapMarker, null, '\n')"
                 ></l-popup>
               </l-marker>
             </v-marker-cluster>
           </l-map>
         </div>
+      </v-col>
+    </v-row>
+    <v-row align="center" justify="center">
+      <v-col cols="10" class="text-center">
+        <v-card>
+          <v-card-text>
+            <v-switch
+              v-model="timelineSwitch"
+              :label="`Oś czasu ${timelineSwitch ? 'włączona' : 'wyłączona'}`"
+            ></v-switch>
+            <v-btn
+              @click="changeLocationBtn('prev')"
+              :disabled="!timelineSwitch || timelineSliderValue === 0"
+              >Poprzednia lokacja
+            </v-btn>
+            <v-btn
+              @click="changeLocationBtn('next')"
+              :disabled="
+                !timelineSwitch || timelineSliderValue === timelineSliderMax
+              "
+            >
+              Następna lokacja
+            </v-btn>
+            <v-slider
+              :max="timelineSliderMax"
+              :disabled="!timelineSwitch"
+              v-model="timelineSliderValue"
+              step="1"
+              thumb-label
+              ticks
+              :label="currentLocation"
+            >
+            </v-slider>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -73,17 +108,26 @@ export default {
       literalMapData: {},
       literaryMaps: [],
       showMap: true,
-      markers: null,
+      locations: null,
+      mapMarkers: null,
       map: null,
       id: 0,
-      inputUrl:
-        "https://gist.githubusercontent.com/DawidPiechota/58e754ed0ab6e0e05a27eeb421fd98b1/raw/6878d98e1dc87ccfc93ac45b7b6d9aa6faf0ec8d/locations.json"
+      timelineSwitch: false,
+      timelineSliderValue: 0,
+      timelineSliderMax: 10,
+      currentLocation: "Location"
     };
   },
   watch: {
     "$attrs.id": function() {
       this.id = this.$attrs.id;
       this.getDataFromServer();
+    },
+    timelineSwitch: function() {
+      this.timelineOnOff();
+    },
+    timelineSliderValue: function() {
+      this.updatemapMarkers();
     }
   },
   methods: {
@@ -93,12 +137,11 @@ export default {
       this.map.setZoom(2);
     },
     centerUpdate(center) {
-      // console.clear();
-      console.group("Map bounds and center. Zoom level");
-      console.log(`zoom: ${this.map.getZoom()}`);
-      console.table(this.map.getBounds());
-      console.table(center);
-      console.groupEnd();
+      /*
+      For future optimalizations:
+      this.map.getBounds()
+      this.map.getZoom()
+      */
     },
     fetchInitData() {
       this.id = this.$attrs.id;
@@ -133,13 +176,44 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "MapsList" });
           }
-          this.markers = [...this.literalMapData.nodesData];
+          this.locations = [...this.literalMapData.nodesData];
+          this.mapMarkers = [...this.literalMapData.nodesData];
         })
         .catch(err => {
           if (err.response.status === 404) {
             this.$router.push({ name: "MapsList" });
           }
         });
+    },
+    timelineOnOff() {
+      this.timelineSliderValue = 0;
+      if (this.timelineSwitch) {
+        // Timeline on
+        console.log("Timeline on");
+        this.timelineSliderMax = this.locations.length - 1;
+        this.updatemapMarkers();
+      } else {
+        // Timeline off
+        console.log("Timeline off");
+        this.mapMarkers = [...this.locations];
+        this.currentLocation = "Location";
+      }
+    },
+    updatemapMarkers() {
+      if (!this.timelineSwitch) return;
+      // One marker per tick
+      this.mapMarkers = [this.locations[this.timelineSliderValue]];
+      this.map.setView(this.mapMarkers[0].coords);
+      console.log(`Location: ${this.mapMarkers[0].name}`);
+      this.currentLocation = this.mapMarkers[0].name;
+    },
+    changeLocationBtn(direction) {
+      console.log(direction);
+      if (direction === "prev") {
+        this.timelineSliderValue--;
+      } else {
+        this.timelineSliderValue++;
+      }
     }
   },
   created() {
