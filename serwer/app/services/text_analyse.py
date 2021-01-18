@@ -97,8 +97,24 @@ def get_location(info):
 
     for line in info:
         try:
-            loc = line["name"]
+            base = line["name"]
+            orth = line["orth"]
+            ctag = line["ctag"]
+            flags = "True True"
+            ann = "nam_loc_gpe_city"
 
+            phrases = []
+            phrases.append([orth, base, ctag, flags, ann])
+
+            payload = {'lexeme_polem': phrases, 'tool': 'polem', 'options': [], 'lexeme':'', 'task':'all'}
+            headers = {'content-type': 'application/json'}
+            url = 'http://ws.clarin-pl.eu/lexrest/lex'
+
+            response = requests.post(url, data=json.dumps(payload), headers=headers).text
+            response_json = json.loads(response)
+            loc = response_json["results"][0]
+
+            line["name"] = loc
             location = geolocator.geocode(loc)
             line["coords"] = {
                 "lat": location.latitude,
