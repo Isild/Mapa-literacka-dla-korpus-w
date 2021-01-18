@@ -1,7 +1,7 @@
 <template>
   <v-container fill-height fluid>
     <v-row style="z-index: 2" align="center" justify="center" class="mt-4">
-      <v-col cols="10 " class="text-center">
+      <v-col cols="10" class="text-center">
         <v-autocomplete
           v-model="literalMapData.id"
           :items="literaryMaps"
@@ -13,15 +13,15 @@
         />
       </v-col>
     </v-row>
-    <v-row style="z-index: 1" align="center" justify="center">
-      <v-col cols="10">
-        <div style="height: 600px; width: 800px">
+    <v-row style="z-index: 2" align="center" justify="center">
+      <v-col cols="8">
+        <v-card>
           <l-map
             ref="myMap"
             @ready="onReady()"
             v-if="showMap"
             :options="mapOptions"
-            style="height: 100%;"
+            style="height: 66vh; width: 100%"
             @update:center="centerUpdate"
           >
             <l-tile-layer
@@ -41,7 +41,7 @@
               </l-marker>
             </v-marker-cluster>
           </l-map>
-        </div>
+        </v-card>
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
@@ -144,9 +144,10 @@ export default {
       this.map.setZoom(2);
       L.easyPrint({
         title: "My awesome print button",
-        position: "topleft",
+        position: "bottomleft",
         sizeModes: ["Current", "A4Portrait", "A4Landscape"],
-        exportOnly: true
+        exportOnly: true,
+        filename: "WWZD Map"
       }).addTo(this.map);
     },
     centerUpdate(center) {
