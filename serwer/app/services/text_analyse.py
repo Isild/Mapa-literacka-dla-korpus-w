@@ -10,7 +10,7 @@ clarinpl_url = "http://ws.clarin-pl.eu/nlprest2/base"
 url = clarinpl_url + "/process"
 user_mail = "testo@.test.pl"
 # Tag and recognize localizations (coarse-grained categories)
-lpmn = 'wcrft2|liner2({"model":"top9"})'
+lpmn = 'wcrft2|liner2({"model":"n82"})'
 
 text = "Paweł robi zadanie z Przemek w Polska.\
 Przemek współpracuje z Pawłem już nie w Polsce.\
