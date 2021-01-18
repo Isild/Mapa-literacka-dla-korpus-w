@@ -79,6 +79,35 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-row justify="center" align="center">
+      <v-col cols="auto" class="text-center">
+        <v-file-input label="Wybierz plik..." v-model="fileToUpload" />
+        <v-btn @click="onLoad()" small color="primary">
+          Wczytaj dane z pliku
+        </v-btn>
+      </v-col>
+      <v-col cols="auto" class="text-center">
+        <v-btn @click="onSave()" small color="primary">
+          Zapisz dane do pliku
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-dialog v-model="isFileToUpload" max-width="300">
+      <v-card color="warning">
+        <v-card-title>Nie wybrałeś pliku!</v-card-title>
+
+        <v-card-text>
+          Aby załadować dane wybierz plik.
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="isFileToUpload = false">
+            OK
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -90,6 +119,7 @@ import { LMap, LTileLayer, LMarker, LPopup } from "vue2-leaflet";
 import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
 import "leaflet-easyprint";
 import axios from "axios";
+import { saveAs } from "file-saver";
 
 export default {
   name: "VisualiseLocations",
@@ -121,7 +151,9 @@ export default {
       timelineSwitch: false,
       timelineSliderValue: 0,
       timelineSliderMax: 10,
-      currentLocation: "Location"
+      currentLocation: "Location",
+      fileToUpload: null,
+      isFileToUpload: null
     };
   },
   watch: {
@@ -198,6 +230,29 @@ export default {
             this.$router.push({ name: "MapsList" });
           }
         });
+    },
+    onSave() {
+      const dataToSave = {};
+      dataToSave.locations = this.locations;
+      dataToSave.mapMarkers = this.mapMarkers;
+      const blob = new Blob([JSON.stringify(dataToSave)], {
+        type: "application/json;charset=utf-8"
+      });
+      saveAs(blob, "mapData.json");
+    },
+    onLoad() {
+      if (this.fileToUpload) {
+        const reader = new FileReader();
+        reader.addEventListener("load", event => {
+          const tmpData = JSON.parse(event.target.result.toString());
+          this.locations = tmpData.locations;
+          this.mapMarkers = tmpData.mapMarkers;
+          this.fileToUpload = null;
+        });
+        reader.readAsText(this.fileToUpload, "utf-8");
+      } else {
+        this.isFileToUpload = true;
+      }
     },
     timelineOnOff() {
       this.timelineSliderValue = 0;

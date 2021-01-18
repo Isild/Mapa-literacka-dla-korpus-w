@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^0.21.0",
     "core-js": "^3.6.4",
-    "file-saver": "^2.0.2",
+    "file-saver": "^2.0.5",
     "leaflet": "^1.7.1",
     "leaflet-easyprint": "^2.1.9",
     "pdfjs-dist": "^2.3.200",
