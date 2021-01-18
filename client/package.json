@@ -13,6 +13,7 @@
     "core-js": "^3.6.4",
     "file-saver": "^2.0.2",
     "leaflet": "^1.7.1",
+    "leaflet-easyprint": "^2.1.9",
     "pdfjs-dist": "^2.3.200",
     "save-svg-as-png": "^1.4.17",
     "vue": "^2.6.11",
