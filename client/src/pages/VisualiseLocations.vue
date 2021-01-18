@@ -1,7 +1,7 @@
 <template>
   <v-container fill-height fluid>
     <v-row style="z-index: 2" align="center" justify="center" class="mt-4">
-      <v-col cols="10 " class="text-center">
+      <v-col cols="10" class="text-center">
         <v-autocomplete
           v-model="literalMapData.id"
           :items="literaryMaps"
@@ -13,18 +13,22 @@
         />
       </v-col>
     </v-row>
-    <v-row style="z-index: 1" align="center" justify="center">
-      <v-col cols="10">
-        <div style="height: 600px; width: 800px">
+    <v-row style="z-index: 2" align="center" justify="center">
+      <v-col cols="8">
+        <v-card>
           <l-map
             ref="myMap"
             @ready="onReady()"
             v-if="showMap"
             :options="mapOptions"
-            style="height: 100%"
+            style="height: 66vh; width: 100%"
             @update:center="centerUpdate"
           >
-            <l-tile-layer :url="url" :attribution="attribution" />
+            <l-tile-layer
+              crossOrigin="true"
+              :url="url"
+              :attribution="attribution"
+            />
             <v-marker-cluster>
               <l-marker
                 v-for="mapMarker of mapMarkers"
@@ -37,7 +41,7 @@
               </l-marker>
             </v-marker-cluster>
           </l-map>
-        </div>
+        </v-card>
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
@@ -79,11 +83,12 @@
 </template>
 
 <script>
-import { Icon, latLng } from "leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { LMap, LTileLayer, LMarker, LPopup } from "vue2-leaflet";
 import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
+import "leaflet-easyprint";
 import axios from "axios";
 
 export default {
@@ -97,8 +102,9 @@ export default {
   },
   data() {
     return {
-      center: latLng(47.41322, -1.219482),
+      center: L.latLng(47.41322, -1.219482),
       url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      crossOrigin: null,
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       mapOptions: {
@@ -136,6 +142,13 @@ export default {
       // Map object is not immediately available therefore:
       this.map = this.$refs.myMap.mapObject;
       this.map.setZoom(2);
+      L.easyPrint({
+        title: "My awesome print button",
+        position: "bottomleft",
+        sizeModes: ["Current", "A4Portrait", "A4Landscape"],
+        exportOnly: true,
+        filename: "WWZD Map"
+      }).addTo(this.map);
     },
     centerUpdate(center) {
       /*
@@ -221,8 +234,8 @@ export default {
     this.fetchInitData();
   },
   mounted() {
-    delete Icon.Default.prototype._getIconUrl;
-    Icon.Default.mergeOptions({
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
       iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
       iconUrl: require("leaflet/dist/images/marker-icon.png"),
       shadowUrl: require("leaflet/dist/images/marker-shadow.png")
