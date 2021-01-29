@@ -29,7 +29,13 @@
               :url="url"
               :attribution="attribution"
             />
-            <v-marker-cluster>
+            <v-marker-cluster
+              :options="{
+                singleMarkerMode: true,
+                spiderfyOnMaxZoom: false,
+                zoomToBoundsOnClick: false
+              }"
+            >
               <l-marker
                 v-for="mapMarker of mapMarkers"
                 v-bind:key="mapMarker.id"
