@@ -46,49 +46,47 @@ def getTextInf(text_to_send, lm_id):
 
     loc_ann = []
     tree = Et.fromstring(ccl)
-    previousStr = ''
     sentenceIt = 1
-    prev_city = 0
     location_dict = {}
     city_word_cnt = 0
-    for tok in tree.iter("tok"):
-        annot = tok.findall('ann')
-        for ann in annot:
-            if (ann is not None):
-                lexBase = tok.find('./lex/base')
-                if (previousStr != '.' and lexBase.text == '.'):
-                    sentenceIt = sentenceIt + 1
-                ann_attr = ann.attrib
-                if (ann_attr["chan"] == 'nam_loc_gpe_city'):
-                    is_city = int(ann.text)
-                    if (is_city):
-                        if (prev_city == is_city):
-                            location_dict["name"] += " " + lexBase.text
-                            location_dict["orth"] += " " + tok.find("orth").text
-                            location_dict["ctag"] += " " + tok.find("./lex/ctag").text
-                            city_word_cnt += 1
+
+    for sentence in tree.iter("sentence"):
+        prev_city = 0
+        for tok in sentence.iter("tok"):
+            annot = tok.findall('ann')
+            for ann in annot:
+                if (ann is not None):
+                    ann_attr = ann.attrib
+                    if (ann_attr["chan"] == 'nam_loc_gpe_city'):
+                        is_city = int(ann.text)
+                        if (is_city):
+                            if (prev_city == is_city):
+                                location_dict["name"] += " " + tok.find('./lex/base').text
+                                location_dict["orth"] += " " + tok.find("orth").text
+                                location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                city_word_cnt += 1
+                            else:
+                                if (location_dict):
+                                    location_dict["word_cnt"] = city_word_cnt
+                                    city_word_cnt = 0
+                                    loc_ann.append(location_dict)
+                                id_num += 1
+                                location_dict = {}
+                                location_dict["id"] = id_num
+                                location_dict["time"] = sentenceIt
+                                location_dict["name"] = tok.find('./lex/base').text
+                                location_dict["orth"] = tok.find("orth").text
+                                location_dict["ctag"] = tok.find("./lex/ctag").text
+                                city_word_cnt += 1
+                                prev_city = is_city
                         else:
                             if (location_dict):
                                 location_dict["word_cnt"] = city_word_cnt
                                 city_word_cnt = 0
                                 loc_ann.append(location_dict)
-                            id_num += 1
                             location_dict = {}
-                            location_dict["id"] = id_num
-                            location_dict["time"] = sentenceIt
-                            location_dict["name"] = lexBase.text
-                            location_dict["orth"] = tok.find("orth").text
-                            location_dict["ctag"] = tok.find("./lex/ctag").text
-                            city_word_cnt += 1
-                            prev_city = is_city
+        sentenceIt = sentenceIt + 1
 
-                if (lexBase.text != '.'):
-                    previousStr = 'c'
-                else:
-                    previousStr = lexBase.text
-
-    location_dict["word_cnt"] = city_word_cnt
-    loc_ann.append(location_dict)
     return loc_ann
 
 
@@ -123,7 +121,7 @@ def get_location(info):
         except:
             print(line)
 
-    loc_json = json.dumps(info)
+    loc_json = json.dumps(info, indent=2)
 
     return loc_json
 
