@@ -47,11 +47,17 @@ def getTextInf(text_to_send, lm_id):
     loc_ann = []
     tree = Et.fromstring(ccl)
     sentenceIt = 1
-    location_dict = {}
+    city_location_dict = {}
+    country_location_dict = {}
+    goe_location_dict = {}
     city_word_cnt = 0
+    country_word_cnt = 0
+    goe_word_cnt = 0
 
     for sentence in tree.iter("sentence"):
         prev_city = 0
+        prev_country = 0
+        prev_goe = 0
         for tok in sentence.iter("tok"):
             annot = tok.findall('ann')
             for ann in annot:
@@ -61,34 +67,98 @@ def getTextInf(text_to_send, lm_id):
                         is_city = int(ann.text)
                         if (is_city):
                             if (prev_city == is_city):
-                                location_dict["name"] += " " + tok.find('./lex/base').text
-                                location_dict["orth"] += " " + tok.find("orth").text
-                                location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                city_location_dict["name"] += " " + tok.find('./lex/base').text
+                                city_location_dict["orth"] += " " + tok.find("orth").text
+                                city_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
                                 city_word_cnt += 1
                             else:
-                                if (location_dict):
-                                    location_dict["word_cnt"] = city_word_cnt
+                                if (city_location_dict):
+                                    city_location_dict["word_cnt"] = city_word_cnt
                                     city_word_cnt = 0
-                                    loc_ann.append(location_dict)
+                                    loc_ann.append(city_location_dict)
+                                    # print(city_location_dict)
                                 id_num += 1
-                                location_dict = {}
-                                location_dict["id"] = id_num
-                                location_dict["time"] = sentenceIt
-                                location_dict["name"] = tok.find('./lex/base').text
-                                location_dict["orth"] = tok.find("orth").text
-                                location_dict["ctag"] = tok.find("./lex/ctag").text
+                                city_location_dict = {}
+                                city_location_dict["id"] = id_num
+                                city_location_dict["time"] = sentenceIt
+                                city_location_dict["name"] = tok.find('./lex/base').text
+                                city_location_dict["orth"] = tok.find("orth").text
+                                city_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                city_location_dict["ann"] = 'nam_loc_gpe_city'
                                 city_word_cnt += 1
                                 prev_city = is_city
                         else:
-                            if (location_dict):
-                                location_dict["word_cnt"] = city_word_cnt
+                            if (city_location_dict):
+                                city_location_dict["word_cnt"] = city_word_cnt
                                 city_word_cnt = 0
-                                loc_ann.append(location_dict)
-                            location_dict = {}
+                                loc_ann.append(city_location_dict)
+                                # print(city_location_dict)
+                            city_location_dict = {}
+                    if (ann_attr["chan"] == 'nam_loc_gpe_country'):
+                        is_country = int(ann.text)
+                        if (is_country):
+                            if (prev_country == is_country):
+                                country_location_dict["name"] += " " + tok.find('./lex/base').text
+                                country_location_dict["orth"] += " " + tok.find("orth").text
+                                country_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                country_word_cnt += 1
+                            else:
+                                if (country_location_dict):
+                                    country_location_dict["word_cnt"] = country_word_cnt
+                                    country_word_cnt = 0
+                                    loc_ann.append(country_location_dict)
+                                    # print(country_location_dict)
+                                id_num += 1
+                                country_location_dict = {}
+                                country_location_dict["id"] = id_num
+                                country_location_dict["time"] = sentenceIt
+                                country_location_dict["name"] = tok.find('./lex/base').text
+                                country_location_dict["orth"] = tok.find("orth").text
+                                country_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                country_location_dict["ann"] = 'nam_loc_gpe_country'
+                                country_word_cnt += 1
+                                prev_country = is_country
+                        else:
+                            if (country_location_dict):
+                                country_location_dict["word_cnt"] = country_word_cnt
+                                country_word_cnt = 0
+                                loc_ann.append(country_location_dict)
+                                # print(country_location_dict)
+                            country_location_dict = {}
+                    if (ann_attr["chan"] == 'nam_fac_goe'):
+                        is_goe = int(ann.text)
+                        if (is_goe):
+                            if (prev_goe == is_goe):
+                                goe_location_dict["name"] += " " + tok.find('./lex/base').text
+                                goe_location_dict["orth"] += " " + tok.find("orth").text
+                                goe_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                goe_word_cnt += 1
+                            else:
+                                if (goe_location_dict):
+                                    goe_location_dict["word_cnt"] = goe_word_cnt
+                                    goe_word_cnt = 0
+                                    loc_ann.append(goe_location_dict)
+                                    # print(goe_location_dict)
+                                id_num += 1
+                                goe_location_dict = {}
+                                goe_location_dict["id"] = id_num
+                                goe_location_dict["time"] = sentenceIt
+                                goe_location_dict["name"] = tok.find('./lex/base').text
+                                goe_location_dict["orth"] = tok.find("orth").text
+                                goe_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                goe_location_dict["ann"] = 'nam_fac_goe'
+                                goe_word_cnt += 1
+                                prev_goe = is_goe
+                        else:
+                            if (goe_location_dict):
+                                goe_location_dict["word_cnt"] = goe_word_cnt
+                                goe_word_cnt = 0
+                                loc_ann.append(goe_location_dict)
+                                # print(goe_location_dict)
+                            goe_location_dict = {}
         sentenceIt = sentenceIt + 1
 
     return loc_ann
-
 
 def get_location(info):
     geolocator = Nominatim(user_agent="map")
@@ -98,8 +168,12 @@ def get_location(info):
             base = line["name"]
             orth = line["orth"]
             ctag = line["ctag"]
-            flags = "True True"
-            ann = "nam_loc_gpe_city"
+            word_cnt = line["word_cnt"]
+            flags = ""
+            for i in range(word_cnt - 1):
+                flags += "True "
+            flags += "False"
+            ann = line["ann"]
 
             phrases = []
             phrases.append([orth, base, ctag, flags, ann])
@@ -108,12 +182,16 @@ def get_location(info):
             headers = {'content-type': 'application/json'}
             url = 'http://ws.clarin-pl.eu/lexrest/lex'
 
+            print(phrases)
             response = requests.post(url, data=json.dumps(payload), headers=headers).text
+            print(response)
             response_json = json.loads(response)
             loc = response_json["results"][0]
 
+            print(loc)
             line["name"] = loc
             location = geolocator.geocode(loc)
+            print(location)
             line["coords"] = {
                 "lat": location.latitude,
                 "lng": location.longitude
