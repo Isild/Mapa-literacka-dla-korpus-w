@@ -30,10 +30,13 @@
               :attribution="attribution"
             />
             <v-marker-cluster
+              ref="clusterRef"
+              @ready="onClusterReady()"
               :options="{
                 singleMarkerMode: true,
                 spiderfyOnMaxZoom: false,
-                zoomToBoundsOnClick: false
+                zoomToBoundsOnClick: false,
+                chunkedLoading: true // test this
               }"
             >
               <l-marker
@@ -49,15 +52,34 @@
           </l-map>
         </v-card>
       </v-col>
+      <v-col cols="3" class="text-center">
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
+            <v-textarea
+              v-if="!timelineSwitch"
+              outlined
+              label="Lokacje z okna czasowego"
+              :value="visibleMarkers"
+              readonly
+            ></v-textarea>
+          </v-col>
+        </v-row>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
+            <v-textarea
+              label="Lokacje z wybranego punktu"
+              :value="clickedMarkers"
+              readonly
+              filled
+            ></v-textarea>
+          </v-col>
+        </v-row>
+      </v-col>
     </v-row>
     <v-row align="center" justify="center">
       <v-col cols="10" class="text-center">
-        <v-card>
+        <v-card v-if="timelineSwitch">
           <v-card-text>
-            <v-switch
-              v-model="timelineSwitch"
-              :label="`Oś czasu ${timelineSwitch ? 'włączona' : 'wyłączona'}`"
-            ></v-switch>
             <v-btn
               @click="changeLocationBtn('prev')"
               :disabled="!timelineSwitch || timelineSliderValue === 0"
@@ -83,6 +105,77 @@
             </v-slider>
           </v-card-text>
         </v-card>
+      </v-col>
+    </v-row>
+    <v-row align="center" justify="center">
+      <v-col cols="10" class="text-center">
+        <v-card v-if="!timelineSwitch">
+          <v-row align="center" justify="center">
+            <v-col>
+              <v-card-text>Szerokość okna</v-card-text>
+            </v-col>
+            <v-col cols="10" class="text-left">
+              <vue-slider
+                class="mr-3"
+                v-model="windowWidthSlider"
+                :contained="true"
+                :marks="marks"
+                :min="1"
+                :max="100"
+                :lazy="!fastPreviewCheck"
+              ></vue-slider>
+            </v-col>
+          </v-row>
+          <v-row align="center" justify="center">
+            <v-col>
+              <v-card-text>Zakres lokacji</v-card-text>
+            </v-col>
+            <v-col cols="10" class="text-left">
+              <vue-slider
+                class="mr-3"
+                v-model="windowSlider"
+                tooltip="none"
+                :process="process"
+                :fixed="true"
+                :contained="true"
+                :marks="marksFromLocations"
+                :hide-label="true"
+                :min="0"
+                :max="100"
+                :lazy="!fastPreviewCheck"
+              >
+                <template v-slot:process="{ style }">
+                  <div class="vue-slider-process" :style="style">
+                    <div
+                      :class="[
+                        'merge-tooltip',
+                        'vue-slider-dot-tooltip-inner',
+                        'vue-slider-dot-tooltip-inner-top'
+                      ]"
+                    >
+                      {{ windowSlider[0] }} - {{ windowSlider[1] }}%
+                    </div>
+                  </div>
+                </template>
+              </vue-slider>
+            </v-col>
+          </v-row>
+          <v-row justify="center" align="center">
+            <v-col cols="2" class="text-center">
+              <v-checkbox
+                v-model="fastPreviewCheck"
+                :label="'Aktualizacja na żywo'"
+              ></v-checkbox>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-row justify="center" align="center">
+      <v-col cols="auto" class="text-center">
+        <v-btn @click="timelineSwitch = !timelineSwitch" color="primary">
+          {{ timelineSwitch ? "okno" : "po kolei" }}
+        </v-btn>
       </v-col>
     </v-row>
     <v-row justify="center" align="center">
@@ -126,6 +219,8 @@ import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
 import "leaflet-easyprint";
 import axios from "axios";
 import { saveAs } from "file-saver";
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/default.css";
 
 export default {
   name: "VisualiseLocations",
@@ -134,7 +229,8 @@ export default {
     LTileLayer,
     LMarker,
     LPopup,
-    "v-marker-cluster": Vue2LeafletMarkerCluster
+    "v-marker-cluster": Vue2LeafletMarkerCluster,
+    VueSlider
   },
   data() {
     return {
@@ -159,7 +255,17 @@ export default {
       timelineSliderMax: 10,
       currentLocation: "Location",
       fileToUpload: null,
-      isFileToUpload: null
+      isFileToUpload: null,
+      windowSlider: [0, 100],
+      windowWidthSlider: 100,
+      process: windowSlider => [[windowSlider[0], windowSlider[1]]],
+      marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+      marksFromLocations: null,
+      locationsSliderType: "window",
+      visibleMarkers: "aaa",
+      maxTime: 0,
+      fastPreviewCheck: 0,
+      clickedMarkers: ""
     };
   },
   watch: {
@@ -172,7 +278,13 @@ export default {
       this.timelineOnOff();
     },
     timelineSliderValue: function() {
-      this.updatemapMarkers();
+      this.updatemapMarkersTimeline();
+    },
+    windowWidthSlider: function() {
+      this.updateSliderWindowWidth();
+    },
+    windowSlider: function() {
+      this.updatemapMarkersWindow();
     }
   },
   methods: {
@@ -187,6 +299,31 @@ export default {
         exportOnly: true,
         filename: "WWZD Map"
       }).addTo(this.map);
+    },
+    onClusterReady() {
+      this.$refs.clusterRef.mapObject.on("clusterclick", a => {
+        this.clickedMarkers = a.layer
+          .getAllChildMarkers()
+          .sort((a, b) => {
+            const el1 = JSON.parse(a._popup._content).time;
+            const el2 = JSON.parse(b._popup._content).time;
+            return el1 - el2;
+          })
+          .reduce((s, marker) => {
+            const element = JSON.parse(marker._popup._content);
+            return `${s}${element.time}: ${element.name} ${
+              element.orth ? `(${element.orth})` : ""
+            } \n`;
+          }, "");
+      });
+      this.$refs.clusterRef.mapObject.on("click", a => {
+        a.sourceTarget.closePopup();
+        console.log(a.sourceTarget._popup._content);
+        const element = JSON.parse(a.sourceTarget._popup._content);
+        this.clickedMarkers = `${element.time}: ${element.name} ${
+          element.orth ? `(${element.orth})` : ""
+        }\n`;
+      });
     },
     centerUpdate(center) {
       /*
@@ -228,8 +365,25 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "MapsList" });
           }
+          // v Could be done on backend, this is a hotfix v
+          this.maxTime = this.literalMapData.nodesData.reduce((max, node) => {
+            if (node.time > max) max = node.time;
+            return max;
+          }, 0);
+          this.literalMapData.nodesData = this.literalMapData.nodesData.map(
+            node => {
+              node.time = Math.round((node.time / this.maxTime) * 100);
+              return node;
+            }
+          );
+          console.log(this.maxTime);
+          // ^ Could be done on backend, this is a hotfix ^
           this.locations = [...this.literalMapData.nodesData];
           this.mapMarkers = [...this.literalMapData.nodesData];
+          this.marksFromLocations = this.literalMapData.nodesData.map(node => {
+            return node.time;
+          });
+          this.timelineOnOff();
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -238,10 +392,7 @@ export default {
         });
     },
     onSave() {
-      const dataToSave = {};
-      dataToSave.locations = this.locations;
-      dataToSave.mapMarkers = this.mapMarkers;
-      const blob = new Blob([JSON.stringify(dataToSave)], {
+      const blob = new Blob([JSON.stringify(this.locations)], {
         type: "application/json;charset=utf-8"
       });
       saveAs(blob, "mapData.json");
@@ -250,10 +401,24 @@ export default {
       if (this.fileToUpload) {
         const reader = new FileReader();
         reader.addEventListener("load", event => {
-          const tmpData = JSON.parse(event.target.result.toString());
-          this.locations = tmpData.locations;
-          this.mapMarkers = tmpData.mapMarkers;
+          let tmpData = JSON.parse(event.target.result.toString());
+          // v Could be done on backend, this is a hotfix v
+          this.maxTime = tmpData.reduce((max, node) => {
+            if (node.time > max) max = node.time;
+            return max;
+          }, 0);
+          tmpData = tmpData.map(node => {
+            node.time = Math.round((node.time / this.maxTime) * 100);
+            return node;
+          });
+          console.log(this.maxTime);
+          // ^ Could be done on backend, this is a hotfix ^
+          this.marksFromLocations = tmpData.map(node => {
+            return node.time;
+          });
+          this.locations = tmpData;
           this.fileToUpload = null;
+          this.timelineOnOff();
         });
         reader.readAsText(this.fileToUpload, "utf-8");
       } else {
@@ -261,26 +426,42 @@ export default {
       }
     },
     timelineOnOff() {
+      this.clickedMarkers = "";
+      this.visibleMarkers = "";
       this.timelineSliderValue = 0;
+      this.windowSlider = [0, 100];
+      this.windowWidthSlider = 100;
       if (this.timelineSwitch) {
         // Timeline on
         console.log("Timeline on");
         this.timelineSliderMax = this.locations.length - 1;
-        this.updatemapMarkers();
+        this.updatemapMarkersTimeline();
       } else {
         // Timeline off
         console.log("Timeline off");
-        this.mapMarkers = [...this.locations];
-        this.currentLocation = "Location";
+        this.updatemapMarkersWindow();
       }
     },
-    updatemapMarkers() {
+    updatemapMarkersTimeline() {
       if (!this.timelineSwitch) return;
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
+    },
+    updatemapMarkersWindow() {
+      if (this.timelineSwitch) return;
+      this.mapMarkers = this.locations.filter(location => {
+        return (
+          location.time >= this.windowSlider[0] &&
+          location.time <= this.windowSlider[1]
+        );
+      });
+      this.visibleMarkers = this.mapMarkers.reduce(
+        (s, m) => (s += `${m.time} ${m.name}\n`),
+        ""
+      );
     },
     changeLocationBtn(direction) {
       console.log(direction);
@@ -289,6 +470,9 @@ export default {
       } else {
         this.timelineSliderValue++;
       }
+    },
+    updateSliderWindowWidth() {
+      this.windowSlider = [0, this.windowWidthSlider];
     }
   },
   created() {
@@ -307,4 +491,10 @@ export default {
 <style>
 @import "~leaflet.markercluster/dist/MarkerCluster.css";
 @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+.merge-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translate(-50%, -10px);
+}
 </style>
