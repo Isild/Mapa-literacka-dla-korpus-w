@@ -382,10 +382,7 @@ export default {
         });
     },
     onSave() {
-      const dataToSave = {};
-      dataToSave.locations = this.locations;
-      dataToSave.mapMarkers = this.mapMarkers;
-      const blob = new Blob([JSON.stringify(dataToSave)], {
+      const blob = new Blob([JSON.stringify(this.locations)], {
         type: "application/json;charset=utf-8"
       });
       saveAs(blob, "mapData.json");
@@ -394,10 +391,24 @@ export default {
       if (this.fileToUpload) {
         const reader = new FileReader();
         reader.addEventListener("load", event => {
-          const tmpData = JSON.parse(event.target.result.toString());
-          this.locations = tmpData.locations;
-          this.mapMarkers = tmpData.mapMarkers;
+          let tmpData = JSON.parse(event.target.result.toString());
+          // v Could be done on backend, this is a hotfix v
+          this.maxTime = tmpData.reduce((max, node) => {
+            if (node.time > max) max = node.time;
+            return max;
+          }, 0);
+          tmpData = tmpData.map(node => {
+            node.time = Math.round((node.time / this.maxTime) * 100);
+            return node;
+          });
+          console.log(this.maxTime);
+          // ^ Could be done on backend, this is a hotfix ^
+          this.marksFromLocations = tmpData.map(node => {
+            return node.time;
+          });
+          this.locations = tmpData;
           this.fileToUpload = null;
+          this.timelineOnOff();
         });
         reader.readAsText(this.fileToUpload, "utf-8");
       } else {
@@ -429,7 +440,6 @@ export default {
     },
     updatemapMarkersWindow() {
       if (this.timelineSwitch) return;
-      this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.mapMarkers = this.locations.filter(location => {
         return (
           location.time >= this.windowSlider[0] &&
