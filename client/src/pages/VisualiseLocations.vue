@@ -459,7 +459,8 @@ export default {
         );
       });
       this.visibleMarkers = this.mapMarkers.reduce(
-        (s, m) => (s += `${m.time} ${m.name}\n`),
+        (s, m) =>
+          (s += `${m.time}: ${m.name} ${m.orth ? `(${m.orth})` : ""}\n`),
         ""
       );
     },
