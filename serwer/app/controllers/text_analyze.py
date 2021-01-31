@@ -147,7 +147,7 @@ class TextAnalyze(MethodView):
 
             print(newReturnList)
             if lm is not None:
-                return lm.toJSON()
+                return newReturnList
             else:
                 return abort(404)
         else:
