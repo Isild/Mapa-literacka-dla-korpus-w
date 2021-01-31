@@ -1,3 +1,4 @@
+import sys
 import requests
 import json
 import xml.etree.ElementTree as Et
@@ -63,99 +64,104 @@ def getTextInf(text_to_send, lm_id):
             for ann in annot:
                 if (ann is not None):
                     ann_attr = ann.attrib
-                    if (ann_attr["chan"] == 'nam_loc_gpe_city'):
-                        is_city = int(ann.text)
-                        if (is_city):
-                            if (prev_city == is_city):
-                                city_location_dict["name"] += " " + tok.find('./lex/base').text
-                                city_location_dict["orth"] += " " + tok.find("orth").text
-                                city_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
-                                city_word_cnt += 1
+                    try:
+                        if (ann_attr["chan"] == 'nam_loc_gpe_city'):
+                            is_city = int(ann.text)
+                            if (is_city):
+                                if (prev_city == is_city):
+                                    city_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    city_location_dict["orth"] += " " + tok.find("orth").text
+                                    city_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    city_word_cnt += 1
+                                else:
+                                    if (city_location_dict):
+                                        city_location_dict["word_cnt"] = city_word_cnt
+                                        city_word_cnt = 0
+                                        loc_ann.append(city_location_dict)
+                                        # print(city_location_dict)
+                                    id_num += 1
+                                    city_location_dict = {}
+                                    city_location_dict["id"] = id_num
+                                    city_location_dict["time"] = sentenceIt
+                                    city_location_dict["name"] = tok.find('./lex/base').text
+                                    city_location_dict["orth"] = tok.find("orth").text
+                                    city_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    city_location_dict["ann"] = 'nam_loc_gpe_city'
+                                    city_word_cnt += 1
+                                    prev_city = is_city
                             else:
                                 if (city_location_dict):
                                     city_location_dict["word_cnt"] = city_word_cnt
                                     city_word_cnt = 0
                                     loc_ann.append(city_location_dict)
                                     # print(city_location_dict)
-                                id_num += 1
                                 city_location_dict = {}
-                                city_location_dict["id"] = id_num
-                                city_location_dict["time"] = sentenceIt
-                                city_location_dict["name"] = tok.find('./lex/base').text
-                                city_location_dict["orth"] = tok.find("orth").text
-                                city_location_dict["ctag"] = tok.find("./lex/ctag").text
-                                city_location_dict["ann"] = 'nam_loc_gpe_city'
-                                city_word_cnt += 1
-                                prev_city = is_city
-                        else:
-                            if (city_location_dict):
-                                city_location_dict["word_cnt"] = city_word_cnt
-                                city_word_cnt = 0
-                                loc_ann.append(city_location_dict)
-                                # print(city_location_dict)
-                            city_location_dict = {}
-                    if (ann_attr["chan"] == 'nam_loc_gpe_country'):
-                        is_country = int(ann.text)
-                        if (is_country):
-                            if (prev_country == is_country):
-                                country_location_dict["name"] += " " + tok.find('./lex/base').text
-                                country_location_dict["orth"] += " " + tok.find("orth").text
-                                country_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
-                                country_word_cnt += 1
+                        if (ann_attr["chan"] == 'nam_loc_gpe_country'):
+                            is_country = int(ann.text)
+                            if (is_country):
+                                if (prev_country == is_country):
+                                    country_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    country_location_dict["orth"] += " " + tok.find("orth").text
+                                    country_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    country_word_cnt += 1
+                                else:
+                                    if (country_location_dict):
+                                        country_location_dict["word_cnt"] = country_word_cnt
+                                        country_word_cnt = 0
+                                        loc_ann.append(country_location_dict)
+                                        # print(country_location_dict)
+                                    id_num += 1
+                                    country_location_dict = {}
+                                    country_location_dict["id"] = id_num
+                                    country_location_dict["time"] = sentenceIt
+                                    country_location_dict["name"] = tok.find('./lex/base').text
+                                    country_location_dict["orth"] = tok.find("orth").text
+                                    country_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    country_location_dict["ann"] = 'nam_loc_gpe_country'
+                                    country_word_cnt += 1
+                                    prev_country = is_country
                             else:
                                 if (country_location_dict):
                                     country_location_dict["word_cnt"] = country_word_cnt
                                     country_word_cnt = 0
                                     loc_ann.append(country_location_dict)
                                     # print(country_location_dict)
-                                id_num += 1
                                 country_location_dict = {}
-                                country_location_dict["id"] = id_num
-                                country_location_dict["time"] = sentenceIt
-                                country_location_dict["name"] = tok.find('./lex/base').text
-                                country_location_dict["orth"] = tok.find("orth").text
-                                country_location_dict["ctag"] = tok.find("./lex/ctag").text
-                                country_location_dict["ann"] = 'nam_loc_gpe_country'
-                                country_word_cnt += 1
-                                prev_country = is_country
-                        else:
-                            if (country_location_dict):
-                                country_location_dict["word_cnt"] = country_word_cnt
-                                country_word_cnt = 0
-                                loc_ann.append(country_location_dict)
-                                # print(country_location_dict)
-                            country_location_dict = {}
-                    if (ann_attr["chan"] == 'nam_fac_goe'):
-                        is_goe = int(ann.text)
-                        if (is_goe):
-                            if (prev_goe == is_goe):
-                                goe_location_dict["name"] += " " + tok.find('./lex/base').text
-                                goe_location_dict["orth"] += " " + tok.find("orth").text
-                                goe_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
-                                goe_word_cnt += 1
+                        if (ann_attr["chan"] == 'nam_fac_goe'):
+                            is_goe = int(ann.text)
+                            if (is_goe):
+                                if (prev_goe == is_goe):
+                                    goe_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    goe_location_dict["orth"] += " " + tok.find("orth").text
+                                    goe_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    goe_word_cnt += 1
+                                else:
+                                    if (goe_location_dict):
+                                        goe_location_dict["word_cnt"] = goe_word_cnt
+                                        goe_word_cnt = 0
+                                        loc_ann.append(goe_location_dict)
+                                        # print(goe_location_dict)
+                                    id_num += 1
+                                    goe_location_dict = {}
+                                    goe_location_dict["id"] = id_num
+                                    goe_location_dict["time"] = sentenceIt
+                                    goe_location_dict["name"] = tok.find('./lex/base').text
+                                    goe_location_dict["orth"] = tok.find("orth").text
+                                    goe_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    goe_location_dict["ann"] = 'nam_fac_goe'
+                                    goe_word_cnt += 1
+                                    prev_goe = is_goe
                             else:
                                 if (goe_location_dict):
                                     goe_location_dict["word_cnt"] = goe_word_cnt
                                     goe_word_cnt = 0
                                     loc_ann.append(goe_location_dict)
                                     # print(goe_location_dict)
-                                id_num += 1
                                 goe_location_dict = {}
-                                goe_location_dict["id"] = id_num
-                                goe_location_dict["time"] = sentenceIt
-                                goe_location_dict["name"] = tok.find('./lex/base').text
-                                goe_location_dict["orth"] = tok.find("orth").text
-                                goe_location_dict["ctag"] = tok.find("./lex/ctag").text
-                                goe_location_dict["ann"] = 'nam_fac_goe'
-                                goe_word_cnt += 1
-                                prev_goe = is_goe
-                        else:
-                            if (goe_location_dict):
-                                goe_location_dict["word_cnt"] = goe_word_cnt
-                                goe_word_cnt = 0
-                                loc_ann.append(goe_location_dict)
-                                # print(goe_location_dict)
-                            goe_location_dict = {}
+                    except Exception as e:
+                        print("Exception occured: ",
+                            sys.exc_info()[0], " ", sys.exc_info()[1],
+                            " ", sys.exc_info()[2], " ; ", e)
         sentenceIt = sentenceIt + 1
 
     return loc_ann
