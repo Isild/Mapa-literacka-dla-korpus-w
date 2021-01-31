@@ -33,7 +33,8 @@
               :options="{
                 singleMarkerMode: true,
                 spiderfyOnMaxZoom: false,
-                zoomToBoundsOnClick: false
+                zoomToBoundsOnClick: false,
+                chunkedLoading: true // test this
               }"
             >
               <l-marker
@@ -52,12 +53,8 @@
     </v-row>
     <v-row align="center" justify="center">
       <v-col cols="10" class="text-center">
-        <v-card v-if="locationsSliderType === 'window'">
+        <v-card v-if="timelineSwitch">
           <v-card-text>
-            <v-switch
-              v-model="timelineSwitch"
-              :label="`Oś czasu ${timelineSwitch ? 'włączona' : 'wyłączona'}`"
-            ></v-switch>
             <v-btn
               @click="changeLocationBtn('prev')"
               :disabled="!timelineSwitch || timelineSliderValue === 0"
@@ -87,7 +84,7 @@
     </v-row>
     <v-row align="center" justify="center">
       <v-col cols="10" class="text-center">
-        <v-card v-if="locationsSliderType === 'window'">
+        <v-card v-if="!timelineSwitch">
           <v-row align="center" justify="center">
             <v-col>
               <v-card-text>Szerokość okna</v-card-text>
@@ -141,8 +138,8 @@
     </v-row>
     <v-row justify="center" align="center">
       <v-col cols="auto" class="text-center">
-        <v-btn>
-          Po jednej lokacji
+        <v-btn @click="timelineSwitch = !timelineSwitch" color="primary">
+          {{ timelineSwitch ? "okno" : "po kolei" }}
         </v-btn>
       </v-col>
     </v-row>
@@ -224,8 +221,8 @@ export default {
       currentLocation: "Location",
       fileToUpload: null,
       isFileToUpload: null,
-      value: [0, 30],
-      value2: 50,
+      value: [0, 100],
+      value2: 100,
       process: value => [[value[0], value[1]]],
       marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
       marksFromLocations: null,
@@ -242,10 +239,13 @@ export default {
       this.timelineOnOff();
     },
     timelineSliderValue: function() {
-      this.updatemapMarkers();
+      this.updatemapMarkersTimeline();
     },
     value2: function() {
       this.updateSliderWindowWidth();
+    },
+    value: function() {
+      this.updatemapMarkersWindow();
     }
   },
   methods: {
@@ -338,25 +338,33 @@ export default {
     },
     timelineOnOff() {
       this.timelineSliderValue = 0;
+      this.value = [0, 100];
+      this.value2 = 100;
       if (this.timelineSwitch) {
         // Timeline on
         console.log("Timeline on");
         this.timelineSliderMax = this.locations.length - 1;
-        this.updatemapMarkers();
+        this.updatemapMarkersTimeline();
       } else {
         // Timeline off
         console.log("Timeline off");
-        this.mapMarkers = [...this.locations];
-        this.currentLocation = "Location";
+        this.updatemapMarkersWindow();
       }
     },
-    updatemapMarkers() {
+    updatemapMarkersTimeline() {
       if (!this.timelineSwitch) return;
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
+    },
+    updatemapMarkersWindow() {
+      if (this.timelineSwitch) return;
+      this.mapMarkers = [this.locations[this.timelineSliderValue]];
+      this.mapMarkers = this.locations.filter(location => {
+        return location.time >= this.value[0] && location.time <= this.value[1];
+      });
     },
     changeLocationBtn(direction) {
       console.log(direction);
