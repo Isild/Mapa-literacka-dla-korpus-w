@@ -172,6 +172,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-row justify="center" align="center">
+      <v-col cols="4" class="text-center">
+        <v-textarea
+          v-if="!timelineSwitch"
+          outlined
+          label="Lokacje z okna czasowego"
+          :value="visibleMarkers"
+          readonly
+        ></v-textarea>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
@@ -226,7 +237,8 @@ export default {
       process: value => [[value[0], value[1]]],
       marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
       marksFromLocations: null,
-      locationsSliderType: "window"
+      locationsSliderType: "window",
+      visibleMarkers: "aaa"
     };
   },
   watch: {
@@ -365,6 +377,10 @@ export default {
       this.mapMarkers = this.locations.filter(location => {
         return location.time >= this.value[0] && location.time <= this.value[1];
       });
+      this.visibleMarkers = this.mapMarkers.reduce(
+        (s, m) => (s += `${m.time} ${m.name}\n`),
+        ""
+      );
     },
     changeLocationBtn(direction) {
       console.log(direction);
