@@ -190,18 +190,51 @@ def get_location(info):
 
         except:
             print(line)
-    response = requests.post(url, data=json.dumps(payload), headers=headers).text
-    response_json = json.loads(response)
+    for i in range(2):
+        response = requests.post(url, data=json.dumps(payload), headers=headers).text
+        try:
+            response_json = json.loads(response)
+        except Exception as e:
+            print("Exception occured: ",
+                sys.exc_info()[0], " ", sys.exc_info()[1],
+                " ", sys.exc_info()[2], " ; ", e)
+            if (i == 0):
+                print("bad format of Polem response: ")
+                print(response)
+                print("retrying...")
+            else:
+                print("second bad format of Polem response: ")
+                print(response)
+                raise ValueError
+
 
     res = 0
     for line in info:
         loc = response_json["results"][res]
         location = geolocator.geocode(loc)
-        line["name"] = location.address.split(", ")[0]
-        line["coords"] = {
-            "lat": location.latitude,
-            "lng": location.longitude
-        }
+        for i in range(2):
+            try:
+                line["coords"] = {
+                    "lat": location.latitude,
+                    "lng": location.longitude
+                }
+                line["name"] = location.address.split(", ")[0]
+                break
+            except Exception as e:
+                print("Exception occured: ",
+                    sys.exc_info()[0], " ", sys.exc_info()[1],
+                    " ", sys.exc_info()[2], " ; ", e)
+                if (i == 0):
+                    print("location not found, falling back to pre-polem location string")
+                    print(line["name"])
+                    location = geolocator.geocode(line["name"])
+                else:
+                    print("location not found second time, falling back with faulty cords")
+                    line["coords"] = {
+                        "lat": -1,
+                        "lng": -1
+                    }
+                    line["name"] = "LOCATION NOT FOUND"
         res += 1
 
     loc_json = json.dumps(info, indent=2)
