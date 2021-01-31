@@ -55,6 +55,15 @@
       <v-col cols="3" class="text-center">
         <v-row justify="center" align="center">
           <v-col class="text-center">
+            <v-checkbox
+              label="Turbo!"
+              @change="getDataFromServer"
+              v-model="turbo"
+            />
+          </v-col>
+        </v-row>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
             <v-textarea
               v-if="!timelineSwitch"
               outlined
@@ -265,7 +274,8 @@ export default {
       visibleMarkers: "aaa",
       maxTime: 0,
       fastPreviewCheck: 0,
-      clickedMarkers: ""
+      clickedMarkers: "",
+      turbo: true
     };
   },
   watch: {
@@ -326,11 +336,10 @@ export default {
       });
     },
     centerUpdate(center) {
-      /*
-      For future optimalizations:
-      this.map.getBounds()
-      this.map.getZoom()
-      */
+      // For future optimalizations:
+      // this.map.getBounds()
+      // this.map.getZoom()
+      this.getDataFromServer();
     },
     fetchInitData() {
       this.id = this.$attrs.id;
@@ -358,8 +367,23 @@ export default {
     },
 
     getDataFromServer() {
+      let queryParams = {};
+      if (this.turbo) {
+        queryParams = {
+          id: this.id
+        };
+      } else {
+        queryParams = {
+          id: this.id,
+          x1: this.map.getBounds().getNorthWest().lat,
+          y1: this.map.getBounds().getNorthWest().lng,
+          x2: this.map.getBounds().getSouthEast().lat,
+          y2: this.map.getBounds().getSouthEast().lng
+        };
+      }
+
       axios
-        .get("http://127.0.0.1:5000/processText", { params: { id: this.id } })
+        .get("http://127.0.0.1:5000/processText", { params: queryParams })
         .then(response => {
           this.literalMapData = response.data;
           if (this.literalMapData.status !== "ready") {

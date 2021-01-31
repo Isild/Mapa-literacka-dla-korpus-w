@@ -22,13 +22,17 @@ class TextAnalyze(MethodView):
         lm_id = request.args.get('id')
         lm = LiteraryMap.query.filter_by(id=lm_id).first()
         # obszar testowy
-        x1 = -102
-        y1 = 52
-        x2 = 54
-        y2 = 30
+        # x1 = -102
+        # y1 = 52
+        # x2 = 54
+        # y2 = 30
         ################
         lmJson = lm.toJSON()
         if request.args.get('x1') and request.args.get('y1') and request.args.get('x2') and request.args.get('y2'):
+            x1 = float(request.args.get('x1'))
+            y1 = float(request.args.get('y1'))
+            x2 = float(request.args.get('x2'))
+            y2 = float(request.args.get('y2'))
             wH = 10
             wW = 20
             d = x2 - x1
@@ -58,8 +62,10 @@ class TextAnalyze(MethodView):
 
             print(myMap)
             print("\n")
+            print(locations)
             p = 0
             for loc in locations:
+                print(loc)
                 xP = loc['coords']['lng']
                 yP =loc['coords']['lat']
                 # if p < 3:
