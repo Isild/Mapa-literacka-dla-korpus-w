@@ -97,6 +97,7 @@
                 :marks="marks"
                 :min="1"
                 :max="100"
+                :lazy="!fastPreviewCheck"
               ></vue-slider>
             </v-col>
           </v-row>
@@ -116,6 +117,7 @@
                 :hide-label="true"
                 :min="0"
                 :max="100"
+                :lazy="!fastPreviewCheck"
               >
                 <template v-slot:process="{ style }">
                   <div class="vue-slider-process" :style="style">
@@ -131,6 +133,14 @@
                   </div>
                 </template>
               </vue-slider>
+            </v-col>
+          </v-row>
+          <v-row justify="center" align="center">
+            <v-col cols="2" class="text-center">
+              <v-checkbox
+                v-model="fastPreviewCheck"
+                :label="'Aktualizacja na żywo'"
+              ></v-checkbox>
             </v-col>
           </v-row>
         </v-card>
@@ -238,7 +248,9 @@ export default {
       marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
       marksFromLocations: null,
       locationsSliderType: "window",
-      visibleMarkers: "aaa"
+      visibleMarkers: "aaa",
+      maxTime: 0,
+      fastPreviewCheck: 0
     };
   },
   watch: {
@@ -313,6 +325,19 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "MapsList" });
           }
+          // v Could be done on backend, this is a hotfix v
+          this.maxTime = this.literalMapData.nodesData.reduce((max, node) => {
+            if (node.time > max) max = node.time;
+            return max;
+          }, 0);
+          this.literalMapData.nodesData = this.literalMapData.nodesData.map(
+            node => {
+              node.time = Math.round((node.time / this.maxTime) * 100);
+              return node;
+            }
+          );
+          console.log(this.maxTime);
+          // ^ Could be done on backend, this is a hotfix ^
           this.locations = [...this.literalMapData.nodesData];
           this.mapMarkers = [...this.literalMapData.nodesData];
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
