@@ -53,12 +53,27 @@
         </v-card>
       </v-col>
       <v-col cols="3" class="text-center">
-        <v-textarea
-          label="Lokacje z wybranego punktu"
-          :value="clickedMarkers"
-          readonly
-          filled
-        ></v-textarea>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
+            <v-textarea
+              v-if="!timelineSwitch"
+              outlined
+              label="Lokacje z okna czasowego"
+              :value="visibleMarkers"
+              readonly
+            ></v-textarea>
+          </v-col>
+        </v-row>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
+            <v-textarea
+              label="Lokacje z wybranego punktu"
+              :value="clickedMarkers"
+              readonly
+              filled
+            ></v-textarea>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
@@ -192,17 +207,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-row justify="center" align="center">
-      <v-col cols="4" class="text-center">
-        <v-textarea
-          v-if="!timelineSwitch"
-          outlined
-          label="Lokacje z okna czasowego"
-          :value="visibleMarkers"
-          readonly
-        ></v-textarea>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
@@ -307,13 +311,18 @@ export default {
           })
           .reduce((s, marker) => {
             const element = JSON.parse(marker._popup._content);
-            return `${s}${element.time}: ${element.name}\n`;
+            return `${s}${element.time}: ${element.name} ${
+              element.orth ? `(${element.orth})` : ""
+            } \n`;
           }, "");
       });
       this.$refs.clusterRef.mapObject.on("click", a => {
         a.sourceTarget.closePopup();
+        console.log(a.sourceTarget._popup._content);
         const element = JSON.parse(a.sourceTarget._popup._content);
-        this.clickedMarkers = `${element.time}: ${element.name}\n`;
+        this.clickedMarkers = `${element.time}: ${element.name} ${
+          element.orth ? `(${element.orth})` : ""
+        }\n`;
       });
     },
     centerUpdate(center) {
@@ -374,6 +383,7 @@ export default {
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
             return node.time;
           });
+          this.timelineOnOff();
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -416,6 +426,8 @@ export default {
       }
     },
     timelineOnOff() {
+      this.clickedMarkers = "";
+      this.visibleMarkers = "";
       this.timelineSliderValue = 0;
       this.windowSlider = [0, 100];
       this.windowWidthSlider = 100;
