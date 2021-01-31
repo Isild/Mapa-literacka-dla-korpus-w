@@ -92,7 +92,7 @@
             <v-col cols="10" class="text-left">
               <vue-slider
                 class="mr-3"
-                v-model="value2"
+                v-model="windowWidthSlider"
                 :contained="true"
                 :marks="marks"
                 :min="1"
@@ -108,7 +108,7 @@
             <v-col cols="10" class="text-left">
               <vue-slider
                 class="mr-3"
-                v-model="value"
+                v-model="windowSlider"
                 tooltip="none"
                 :process="process"
                 :fixed="true"
@@ -128,7 +128,7 @@
                         'vue-slider-dot-tooltip-inner-top'
                       ]"
                     >
-                      {{ value[0] }} - {{ value[1] }}%
+                      {{ windowSlider[0] }} - {{ windowSlider[1] }}%
                     </div>
                   </div>
                 </template>
@@ -242,9 +242,9 @@ export default {
       currentLocation: "Location",
       fileToUpload: null,
       isFileToUpload: null,
-      value: [0, 100],
-      value2: 100,
-      process: value => [[value[0], value[1]]],
+      windowSlider: [0, 100],
+      windowWidthSlider: 100,
+      process: windowSlider => [[windowSlider[0], windowSlider[1]]],
       marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
       marksFromLocations: null,
       locationsSliderType: "window",
@@ -265,10 +265,10 @@ export default {
     timelineSliderValue: function() {
       this.updatemapMarkersTimeline();
     },
-    value2: function() {
+    windowWidthSlider: function() {
       this.updateSliderWindowWidth();
     },
-    value: function() {
+    windowSlider: function() {
       this.updatemapMarkersWindow();
     }
   },
@@ -375,8 +375,8 @@ export default {
     },
     timelineOnOff() {
       this.timelineSliderValue = 0;
-      this.value = [0, 100];
-      this.value2 = 100;
+      this.windowSlider = [0, 100];
+      this.windowWidthSlider = 100;
       if (this.timelineSwitch) {
         // Timeline on
         console.log("Timeline on");
@@ -400,7 +400,10 @@ export default {
       if (this.timelineSwitch) return;
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.mapMarkers = this.locations.filter(location => {
-        return location.time >= this.value[0] && location.time <= this.value[1];
+        return (
+          location.time >= this.windowSlider[0] &&
+          location.time <= this.windowSlider[1]
+        );
       });
       this.visibleMarkers = this.mapMarkers.reduce(
         (s, m) => (s += `${m.time} ${m.name}\n`),
@@ -416,7 +419,7 @@ export default {
       }
     },
     updateSliderWindowWidth() {
-      this.value = [0, this.value2];
+      this.windowSlider = [0, this.windowWidthSlider];
     }
   },
   created() {
