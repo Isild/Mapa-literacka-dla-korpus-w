@@ -52,7 +52,7 @@
     </v-row>
     <v-row align="center" justify="center">
       <v-col cols="10" class="text-center">
-        <v-card>
+        <v-card v-if="locationsSliderType === 'window'">
           <v-card-text>
             <v-switch
               v-model="timelineSwitch"
@@ -83,6 +83,67 @@
             </v-slider>
           </v-card-text>
         </v-card>
+      </v-col>
+    </v-row>
+    <v-row align="center" justify="center">
+      <v-col cols="10" class="text-center">
+        <v-card v-if="locationsSliderType === 'window'">
+          <v-row align="center" justify="center">
+            <v-col>
+              <v-card-text>Szerokość okna</v-card-text>
+            </v-col>
+            <v-col cols="10" class="text-left">
+              <vue-slider
+                class="mr-3"
+                v-model="value2"
+                :contained="true"
+                :marks="marks"
+                :min="1"
+                :max="100"
+              ></vue-slider>
+            </v-col>
+          </v-row>
+          <v-row align="center" justify="center">
+            <v-col>
+              <v-card-text>Zakres lokacji</v-card-text>
+            </v-col>
+            <v-col cols="10" class="text-left">
+              <vue-slider
+                class="mr-3"
+                v-model="value"
+                tooltip="none"
+                :process="process"
+                :fixed="true"
+                :contained="true"
+                :marks="marksFromLocations"
+                :hide-label="true"
+                :min="0"
+                :max="100"
+              >
+                <template v-slot:process="{ style }">
+                  <div class="vue-slider-process" :style="style">
+                    <div
+                      :class="[
+                        'merge-tooltip',
+                        'vue-slider-dot-tooltip-inner',
+                        'vue-slider-dot-tooltip-inner-top'
+                      ]"
+                    >
+                      {{ value[0] }} - {{ value[1] }}%
+                    </div>
+                  </div>
+                </template>
+              </vue-slider>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-row justify="center" align="center">
+      <v-col cols="auto" class="text-center">
+        <v-btn>
+          Po jednej lokacji
+        </v-btn>
       </v-col>
     </v-row>
     <v-row justify="center" align="center">
@@ -126,6 +187,8 @@ import Vue2LeafletMarkerCluster from "vue2-leaflet-markercluster";
 import "leaflet-easyprint";
 import axios from "axios";
 import { saveAs } from "file-saver";
+import VueSlider from "vue-slider-component";
+import "vue-slider-component/theme/default.css";
 
 export default {
   name: "VisualiseLocations",
@@ -134,7 +197,8 @@ export default {
     LTileLayer,
     LMarker,
     LPopup,
-    "v-marker-cluster": Vue2LeafletMarkerCluster
+    "v-marker-cluster": Vue2LeafletMarkerCluster,
+    VueSlider
   },
   data() {
     return {
@@ -159,7 +223,13 @@ export default {
       timelineSliderMax: 10,
       currentLocation: "Location",
       fileToUpload: null,
-      isFileToUpload: null
+      isFileToUpload: null,
+      value: [0, 30],
+      value2: 50,
+      process: value => [[value[0], value[1]]],
+      marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+      marksFromLocations: null,
+      locationsSliderType: "window"
     };
   },
   watch: {
@@ -173,6 +243,9 @@ export default {
     },
     timelineSliderValue: function() {
       this.updatemapMarkers();
+    },
+    value2: function() {
+      this.updateSliderWindowWidth();
     }
   },
   methods: {
@@ -230,6 +303,9 @@ export default {
           }
           this.locations = [...this.literalMapData.nodesData];
           this.mapMarkers = [...this.literalMapData.nodesData];
+          this.marksFromLocations = this.literalMapData.nodesData.map(node => {
+            return node.time;
+          });
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -289,6 +365,9 @@ export default {
       } else {
         this.timelineSliderValue++;
       }
+    },
+    updateSliderWindowWidth() {
+      this.value = [0, this.value2];
     }
   },
   created() {
@@ -307,4 +386,10 @@ export default {
 <style>
 @import "~leaflet.markercluster/dist/MarkerCluster.css";
 @import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
+.merge-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translate(-50%, -10px);
+}
 </style>
