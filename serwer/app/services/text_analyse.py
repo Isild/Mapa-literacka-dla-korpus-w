@@ -184,20 +184,14 @@ def get_location(info):
 
         except:
             print(line)
-    print(phrases)
     response = requests.post(url, data=json.dumps(payload), headers=headers).text
-    print(response)
     response_json = json.loads(response)
 
     res = 0
     for line in info:
         loc = response_json["results"][res]
-        print(loc)
         line["name"] = loc
         location = geolocator.geocode(loc)
-        print(location)
-        print(location.raw)
-        print(location.address)
         line["coords"] = {
             "lat": location.latitude,
             "lng": location.longitude
