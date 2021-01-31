@@ -1,3 +1,4 @@
+import sys
 import requests
 import json
 import xml.etree.ElementTree as Et
@@ -10,7 +11,7 @@ clarinpl_url = "http://ws.clarin-pl.eu/nlprest2/base"
 url = clarinpl_url + "/process"
 user_mail = "testo@.test.pl"
 # Tag and recognize localizations (coarse-grained categories)
-lpmn = 'wcrft2|liner2({"model":"top9"})'
+lpmn = 'wcrft2|liner2({"model":"n82"})'
 
 text = "Paweł robi zadanie z Przemek w Polska.\
 Przemek współpracuje z Pawłem już nie w Polsce.\
@@ -46,47 +47,197 @@ def getTextInf(text_to_send, lm_id):
 
     loc_ann = []
     tree = Et.fromstring(ccl)
-    previousStr = ''
     sentenceIt = 1
-    for tok in tree.iter("tok"):
-        location_dict = {}
-        annot = tok.findall('ann')
-        for ann in annot:
-            if (ann is not None):
-                lexBase = tok.find('./lex/base')
-                if (previousStr != '.' and lexBase.text == '.'):
-                    sentenceIt = sentenceIt + 1
-                ann_attr = ann.attrib
-                if (ann_attr["chan"] == "nam_loc" and "head" in ann_attr):
-                    location_dict["id"] = id_num
-                    location_dict["name"] = lexBase.text
-                    location_dict["time"] = sentenceIt
-                    loc_ann.append(location_dict)
-                    id_num += 1
+    city_location_dict = {}
+    country_location_dict = {}
+    goe_location_dict = {}
+    city_word_cnt = 0
+    country_word_cnt = 0
+    goe_word_cnt = 0
 
-                if (lexBase.text != '.'):
-                    previousStr = 'c'
-                else:
-                    previousStr = lexBase.text
+    for sentence in tree.iter("sentence"):
+        prev_city = 0
+        prev_country = 0
+        prev_goe = 0
+        for tok in sentence.iter("tok"):
+            annot = tok.findall('ann')
+            for ann in annot:
+                if (ann is not None):
+                    ann_attr = ann.attrib
+                    try:
+                        if (ann_attr["chan"] == 'nam_loc_gpe_city'):
+                            is_city = int(ann.text)
+                            if (is_city):
+                                if (prev_city == is_city):
+                                    city_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    city_location_dict["orth"] += " " + tok.find("orth").text
+                                    city_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    city_word_cnt += 1
+                                else:
+                                    if (city_location_dict):
+                                        city_location_dict["word_cnt"] = city_word_cnt
+                                        city_word_cnt = 0
+                                        loc_ann.append(city_location_dict)
+                                        # print(city_location_dict)
+                                    id_num += 1
+                                    city_location_dict = {}
+                                    city_location_dict["id"] = id_num
+                                    city_location_dict["time"] = sentenceIt
+                                    city_location_dict["name"] = tok.find('./lex/base').text
+                                    city_location_dict["orth"] = tok.find("orth").text
+                                    city_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    city_location_dict["ann"] = 'nam_loc_gpe_city'
+                                    city_word_cnt += 1
+                                    prev_city = is_city
+                            else:
+                                if (city_location_dict):
+                                    city_location_dict["word_cnt"] = city_word_cnt
+                                    city_word_cnt = 0
+                                    loc_ann.append(city_location_dict)
+                                    # print(city_location_dict)
+                                city_location_dict = {}
+                        if (ann_attr["chan"] == 'nam_loc_gpe_country'):
+                            is_country = int(ann.text)
+                            if (is_country):
+                                if (prev_country == is_country):
+                                    country_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    country_location_dict["orth"] += " " + tok.find("orth").text
+                                    country_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    country_word_cnt += 1
+                                else:
+                                    if (country_location_dict):
+                                        country_location_dict["word_cnt"] = country_word_cnt
+                                        country_word_cnt = 0
+                                        loc_ann.append(country_location_dict)
+                                        # print(country_location_dict)
+                                    id_num += 1
+                                    country_location_dict = {}
+                                    country_location_dict["id"] = id_num
+                                    country_location_dict["time"] = sentenceIt
+                                    country_location_dict["name"] = tok.find('./lex/base').text
+                                    country_location_dict["orth"] = tok.find("orth").text
+                                    country_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    country_location_dict["ann"] = 'nam_loc_gpe_country'
+                                    country_word_cnt += 1
+                                    prev_country = is_country
+                            else:
+                                if (country_location_dict):
+                                    country_location_dict["word_cnt"] = country_word_cnt
+                                    country_word_cnt = 0
+                                    loc_ann.append(country_location_dict)
+                                    # print(country_location_dict)
+                                country_location_dict = {}
+                        if (ann_attr["chan"] == 'nam_fac_goe'):
+                            is_goe = int(ann.text)
+                            if (is_goe):
+                                if (prev_goe == is_goe):
+                                    goe_location_dict["name"] += " " + tok.find('./lex/base').text
+                                    goe_location_dict["orth"] += " " + tok.find("orth").text
+                                    goe_location_dict["ctag"] += " " + tok.find("./lex/ctag").text
+                                    goe_word_cnt += 1
+                                else:
+                                    if (goe_location_dict):
+                                        goe_location_dict["word_cnt"] = goe_word_cnt
+                                        goe_word_cnt = 0
+                                        loc_ann.append(goe_location_dict)
+                                        # print(goe_location_dict)
+                                    id_num += 1
+                                    goe_location_dict = {}
+                                    goe_location_dict["id"] = id_num
+                                    goe_location_dict["time"] = sentenceIt
+                                    goe_location_dict["name"] = tok.find('./lex/base').text
+                                    goe_location_dict["orth"] = tok.find("orth").text
+                                    goe_location_dict["ctag"] = tok.find("./lex/ctag").text
+                                    goe_location_dict["ann"] = 'nam_fac_goe'
+                                    goe_word_cnt += 1
+                                    prev_goe = is_goe
+                            else:
+                                if (goe_location_dict):
+                                    goe_location_dict["word_cnt"] = goe_word_cnt
+                                    goe_word_cnt = 0
+                                    loc_ann.append(goe_location_dict)
+                                    # print(goe_location_dict)
+                                goe_location_dict = {}
+                    except Exception as e:
+                        print("Exception occured: ",
+                            sys.exc_info()[0], " ", sys.exc_info()[1],
+                            " ", sys.exc_info()[2], " ; ", e)
+        sentenceIt = sentenceIt + 1
+
     return loc_ann
-
 
 def get_location(info):
     geolocator = Nominatim(user_agent="map")
+    phrases = []
 
     for line in info:
         try:
-            loc = line["name"]
+            base = line["name"]
+            orth = line["orth"]
+            ctag = line["ctag"]
+            word_cnt = line["word_cnt"]
+            flags = ""
+            for i in range(word_cnt - 1):
+                flags += "True "
+            flags += "False"
+            ann = line["ann"]
 
-            location = geolocator.geocode(loc)
-            line["coords"] = {
-                "lat": location.latitude,
-                "lng": location.longitude
-            }
+            phrases.append([orth, base, ctag, flags, ann])
+
+            payload = {'lexeme_polem': phrases, 'tool': 'polem', 'options': [], 'lexeme':'', 'task':'all'}
+            headers = {'content-type': 'application/json'}
+            url = 'http://ws.clarin-pl.eu/lexrest/lex'
+
         except:
             print(line)
+    for i in range(2):
+        response = requests.post(url, data=json.dumps(payload), headers=headers).text
+        try:
+            response_json = json.loads(response)
+        except Exception as e:
+            print("Exception occured: ",
+                sys.exc_info()[0], " ", sys.exc_info()[1],
+                " ", sys.exc_info()[2], " ; ", e)
+            if (i == 0):
+                print("bad format of Polem response: ")
+                print(response)
+                print("retrying...")
+            else:
+                print("second bad format of Polem response: ")
+                print(response)
+                raise ValueError
 
-    loc_json = json.dumps(info)
+
+    res = 0
+    for line in info:
+        loc = response_json["results"][res]
+        location = geolocator.geocode(loc)
+        for i in range(2):
+            try:
+                line["coords"] = {
+                    "lat": location.latitude,
+                    "lng": location.longitude
+                }
+                line["name"] = location.address.split(", ")[0]
+                break
+            except Exception as e:
+                print("Exception occured: ",
+                    sys.exc_info()[0], " ", sys.exc_info()[1],
+                    " ", sys.exc_info()[2], " ; ", e)
+                if (i == 0):
+                    print("location not found, falling back to pre-polem location string")
+                    print(line["name"])
+                    location = geolocator.geocode(line["name"])
+                else:
+                    print("location not found second time, falling back with faulty cords")
+                    line["coords"] = {
+                        "lat": -1,
+                        "lng": -1
+                    }
+                    line["name"] = "LOCATION NOT FOUND"
+        res += 1
+
+    loc_json = json.dumps(info, indent=2)
 
     return loc_json
 
