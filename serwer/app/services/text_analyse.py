@@ -162,6 +162,7 @@ def getTextInf(text_to_send, lm_id):
 
 def get_location(info):
     geolocator = Nominatim(user_agent="map")
+    phrases = []
 
     for line in info:
         try:
@@ -175,29 +176,33 @@ def get_location(info):
             flags += "False"
             ann = line["ann"]
 
-            phrases = []
             phrases.append([orth, base, ctag, flags, ann])
 
             payload = {'lexeme_polem': phrases, 'tool': 'polem', 'options': [], 'lexeme':'', 'task':'all'}
             headers = {'content-type': 'application/json'}
             url = 'http://ws.clarin-pl.eu/lexrest/lex'
 
-            print(phrases)
-            response = requests.post(url, data=json.dumps(payload), headers=headers).text
-            print(response)
-            response_json = json.loads(response)
-            loc = response_json["results"][0]
-
-            print(loc)
-            line["name"] = loc
-            location = geolocator.geocode(loc)
-            print(location)
-            line["coords"] = {
-                "lat": location.latitude,
-                "lng": location.longitude
-            }
         except:
             print(line)
+    print(phrases)
+    response = requests.post(url, data=json.dumps(payload), headers=headers).text
+    print(response)
+    response_json = json.loads(response)
+
+    res = 0
+    for line in info:
+        loc = response_json["results"][res]
+        print(loc)
+        line["name"] = loc
+        location = geolocator.geocode(loc)
+        print(location)
+        print(location.raw)
+        print(location.address)
+        line["coords"] = {
+            "lat": location.latitude,
+            "lng": location.longitude
+        }
+        res += 1
 
     loc_json = json.dumps(info, indent=2)
 
