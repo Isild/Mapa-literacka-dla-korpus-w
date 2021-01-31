@@ -341,7 +341,7 @@ export default {
       // this.map.getBounds()
       // this.map.getZoom()
       if (!this.timelineSwitch) {
-        this.getDataFromServer();
+        this.getDataFromServer(true);
       }
     },
     fetchInitData() {
@@ -369,7 +369,8 @@ export default {
         });
     },
 
-    getDataFromServer() {
+    getDataFromServer(fromCoordsUpdate = false) {
+      if (fromCoordsUpdate && this.turbo) return;
       let queryParams = {};
       if (this.turbo) {
         queryParams = {
