@@ -375,10 +375,10 @@ export default {
       } else {
         queryParams = {
           id: this.id,
-          x1: this.map.getBounds().getNorthWest().lat,
-          y1: this.map.getBounds().getNorthWest().lng,
-          x2: this.map.getBounds().getSouthEast().lat,
-          y2: this.map.getBounds().getSouthEast().lng
+          x1: this.map.getBounds().getNorthWest().lng,
+          y1: this.map.getBounds().getNorthWest().lat,
+          x2: this.map.getBounds().getSouthEast().lng,
+          y2: this.map.getBounds().getSouthEast().lat
         };
       }
 
