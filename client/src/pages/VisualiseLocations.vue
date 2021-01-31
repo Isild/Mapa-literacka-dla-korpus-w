@@ -30,6 +30,8 @@
               :attribution="attribution"
             />
             <v-marker-cluster
+              ref="clusterRef"
+              @ready="onClusterReady()"
               :options="{
                 singleMarkerMode: true,
                 spiderfyOnMaxZoom: false,
@@ -49,6 +51,14 @@
             </v-marker-cluster>
           </l-map>
         </v-card>
+      </v-col>
+      <v-col cols="3" class="text-center">
+        <v-textarea
+          label="Lokacje z wybranego punktu"
+          :value="clickedMarkers"
+          readonly
+          filled
+        ></v-textarea>
       </v-col>
     </v-row>
     <v-row align="center" justify="center">
@@ -250,7 +260,8 @@ export default {
       locationsSliderType: "window",
       visibleMarkers: "aaa",
       maxTime: 0,
-      fastPreviewCheck: 0
+      fastPreviewCheck: 0,
+      clickedMarkers: ""
     };
   },
   watch: {
@@ -284,6 +295,26 @@ export default {
         exportOnly: true,
         filename: "WWZD Map"
       }).addTo(this.map);
+    },
+    onClusterReady() {
+      this.$refs.clusterRef.mapObject.on("clusterclick", a => {
+        this.clickedMarkers = a.layer
+          .getAllChildMarkers()
+          .sort((a, b) => {
+            const el1 = JSON.parse(a._popup._content).time;
+            const el2 = JSON.parse(b._popup._content).time;
+            return el1 - el2;
+          })
+          .reduce((s, marker) => {
+            const element = JSON.parse(marker._popup._content);
+            return `${s}${element.time}: ${element.name}\n`;
+          }, "");
+      });
+      this.$refs.clusterRef.mapObject.on("click", a => {
+        a.sourceTarget.closePopup();
+        const element = JSON.parse(a.sourceTarget._popup._content);
+        this.clickedMarkers = `${element.time}: ${element.name}\n`;
+      });
     },
     centerUpdate(center) {
       /*
