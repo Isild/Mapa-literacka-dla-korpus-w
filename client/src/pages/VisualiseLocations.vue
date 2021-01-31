@@ -57,6 +57,7 @@
           <v-col class="text-center">
             <v-checkbox
               label="Turbo!"
+              :disabled="timelineSwitch"
               @change="getDataFromServer"
               v-model="turbo"
             />
@@ -339,7 +340,9 @@ export default {
       // For future optimalizations:
       // this.map.getBounds()
       // this.map.getZoom()
-      this.getDataFromServer();
+      if (!this.timelineSwitch) {
+        this.getDataFromServer();
+      }
     },
     fetchInitData() {
       this.id = this.$attrs.id;
@@ -457,6 +460,7 @@ export default {
       this.windowWidthSlider = 100;
       if (this.timelineSwitch) {
         // Timeline on
+        this.turbo = true;
         console.log("Timeline on");
         this.timelineSliderMax = this.locations.length - 1;
         this.updatemapMarkersTimeline();
@@ -471,6 +475,9 @@ export default {
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
+      this.clickedMarkers = `${this.mapMarkers[0].time}: ${
+        this.mapMarkers[0].name
+      } ${this.mapMarkers[0].orth ? `(${this.mapMarkers[0].orth})` : ""}\n`;
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
     },
