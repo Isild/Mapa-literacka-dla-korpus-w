@@ -190,8 +190,8 @@ def get_location(info):
     res = 0
     for line in info:
         loc = response_json["results"][res]
-        line["name"] = loc
         location = geolocator.geocode(loc)
+        line["name"] = location.address.split(", ")[0]
         line["coords"] = {
             "lat": location.latitude,
             "lng": location.longitude
