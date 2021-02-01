@@ -55,6 +55,16 @@
       <v-col cols="3" class="text-center">
         <v-row justify="center" align="center">
           <v-col class="text-center">
+            <v-checkbox
+              label="Turbo!"
+              :disabled="timelineSwitch"
+              @change="getDataFromServer"
+              v-model="turbo"
+            />
+          </v-col>
+        </v-row>
+        <v-row justify="center" align="center">
+          <v-col class="text-center">
             <v-textarea
               v-if="!timelineSwitch"
               outlined
@@ -264,8 +274,9 @@ export default {
       locationsSliderType: "window",
       visibleMarkers: "aaa",
       maxTime: 0,
-      fastPreviewCheck: 0,
-      clickedMarkers: ""
+      fastPreviewCheck: true,
+      clickedMarkers: "",
+      turbo: true
     };
   },
   watch: {
@@ -326,11 +337,12 @@ export default {
       });
     },
     centerUpdate(center) {
-      /*
-      For future optimalizations:
-      this.map.getBounds()
-      this.map.getZoom()
-      */
+      // For future optimalizations:
+      // this.map.getBounds()
+      // this.map.getZoom()
+      if (!this.timelineSwitch) {
+        this.getDataFromServer(true);
+      }
     },
     fetchInitData() {
       this.id = this.$attrs.id;
@@ -357,9 +369,25 @@ export default {
         });
     },
 
-    getDataFromServer() {
+    getDataFromServer(fromCoordsUpdate = false) {
+      if (fromCoordsUpdate && this.turbo) return;
+      let queryParams = {};
+      if (this.turbo) {
+        queryParams = {
+          id: this.id
+        };
+      } else {
+        queryParams = {
+          id: this.id,
+          x1: this.map.getBounds().getNorthWest().lng,
+          y1: this.map.getBounds().getNorthWest().lat,
+          x2: this.map.getBounds().getSouthEast().lng,
+          y2: this.map.getBounds().getSouthEast().lat
+        };
+      }
+
       axios
-        .get("http://127.0.0.1:5000/processText", { params: { id: this.id } })
+        .get("http://127.0.0.1:5000/processText", { params: queryParams })
         .then(response => {
           this.literalMapData = response.data;
           if (this.literalMapData.status !== "ready") {
@@ -383,7 +411,7 @@ export default {
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
             return node.time;
           });
-          this.timelineOnOff();
+          if (!fromCoordsUpdate) this.timelineOnOff();
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -433,6 +461,7 @@ export default {
       this.windowWidthSlider = 100;
       if (this.timelineSwitch) {
         // Timeline on
+        this.turbo = true;
         console.log("Timeline on");
         this.timelineSliderMax = this.locations.length - 1;
         this.updatemapMarkersTimeline();
@@ -447,6 +476,9 @@ export default {
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
+      this.clickedMarkers = `${this.mapMarkers[0].time}: ${
+        this.mapMarkers[0].name
+      } ${this.mapMarkers[0].orth ? `(${this.mapMarkers[0].orth})` : ""}\n`;
       console.log(`Location: ${this.mapMarkers[0].name}`);
       this.currentLocation = this.mapMarkers[0].name;
     },
@@ -458,11 +490,11 @@ export default {
           location.time <= this.windowSlider[1]
         );
       });
-      this.visibleMarkers = this.mapMarkers.reduce(
-        (s, m) =>
-          (s += `${m.time}: ${m.name} ${m.orth ? `(${m.orth})` : ""}\n`),
-        ""
-      );
+      this.visibleMarkers = this.mapMarkers
+        .sort((a, b) => {
+          return a.time - b.time;
+        })
+        .reduce((s, m) => (s += `${m.time} ${m.name}\n`), "");
     },
     changeLocationBtn(direction) {
       console.log(direction);

@@ -1,5 +1,5 @@
 <template>
-  <v-footer style="z-index: 3" color="indigo" app>
+  <v-footer style="z-index: 9999999" color="indigo" app>
     <span class="white--text">&copy; 2020</span>
   </v-footer>
 </template>

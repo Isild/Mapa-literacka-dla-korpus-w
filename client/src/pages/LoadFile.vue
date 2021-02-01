@@ -4,8 +4,32 @@
       :active.sync="isLoading"
       :can-cancel="false"
       :on-cancel="onCancel"
-      :is-full-page="true"
-    ></loading>
+      :is-full-page="false"
+    >
+      <template v-slot:default>
+        <v-row justify="center" align="center">
+          <v-col cols="auto">
+            <v-progress-circular
+              indeterminate
+              color="primary"
+            ></v-progress-circular>
+          </v-col>
+        </v-row>
+      </template>
+      <template v-slot:after>
+        <v-row justify="center" align="center">
+          <v-col cols="auto">
+            <v-btn
+              class="text-center"
+              color="primary"
+              v-on:click="$router.go()"
+            >
+              Wczytaj inny tekst
+            </v-btn>
+          </v-col>
+        </v-row>
+      </template>
+    </loading>
     <v-row justify="center" align="center">
       <v-row>
         <v-col cols="12">
