@@ -322,7 +322,7 @@ export default {
           })
           .reduce((s, marker) => {
             const element = JSON.parse(marker._popup._content);
-            return `${s}${element.time.toFixed(1)}% ${element.name} ${
+            return `${s}${element.time.toFixed(2)}% ${element.name} ${
               element.orth ? `(${element.orth})` : ""
             } \n`;
           }, "");
@@ -331,7 +331,7 @@ export default {
         a.sourceTarget.closePopup();
         console.log(a.sourceTarget._popup._content);
         const element = JSON.parse(a.sourceTarget._popup._content);
-        this.clickedMarkers = `${element.time.toFixed(1)}% ${element.name} ${
+        this.clickedMarkers = `${element.time.toFixed(2)}% ${element.name} ${
           element.orth ? `(${element.orth})` : ""
         }\n`;
       });
@@ -454,7 +454,7 @@ export default {
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
-      this.clickedMarkers = `${this.mapMarkers[0].time.toFixed(1)}% ${
+      this.clickedMarkers = `${this.mapMarkers[0].time.toFixed(2)}% ${
         this.mapMarkers[0].name
       } ${this.mapMarkers[0].orth ? `(${this.mapMarkers[0].orth})` : ""}\n`;
       console.log(`Location: ${this.mapMarkers[0].name}`);
@@ -474,7 +474,7 @@ export default {
         })
         .reduce(
           (s, m) =>
-            (s += `${m.time.toFixed(1)}% ${m.name} ${
+            (s += `${m.time.toFixed(2)}% ${m.name} ${
               m.orth ? `(${m.orth})` : ""
             }\n`),
           ""
