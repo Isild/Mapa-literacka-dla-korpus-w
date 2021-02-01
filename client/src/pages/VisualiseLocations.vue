@@ -58,7 +58,6 @@
             <v-checkbox
               label="Turbo!"
               :disabled="timelineSwitch || offlineMode"
-              @change="getDataFromServer"
               v-model="turbo"
             />
           </v-col>
@@ -296,6 +295,9 @@ export default {
     },
     windowSlider: function() {
       this.updatemapMarkersWindow();
+    },
+    turbo: function() {
+      this.getDataFromServer();
     }
   },
   methods: {
@@ -372,6 +374,7 @@ export default {
 
     getDataFromServer(fromCoordsUpdate = false) {
       if ((fromCoordsUpdate && this.turbo) || this.offlineMode) return;
+      console.log("getData");
       let queryParams = {};
       if (this.turbo) {
         queryParams = {
