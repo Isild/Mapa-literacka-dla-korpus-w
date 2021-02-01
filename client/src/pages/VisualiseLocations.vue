@@ -273,7 +273,6 @@ export default {
       marksFromLocations: null,
       locationsSliderType: "window",
       visibleMarkers: "aaa",
-      maxTime: 0,
       fastPreviewCheck: true,
       clickedMarkers: "",
       turbo: true
@@ -393,19 +392,6 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "MapsList" });
           }
-          // v Could be done on backend, this is a hotfix v
-          this.maxTime = this.literalMapData.nodesData.reduce((max, node) => {
-            if (node.time > max) max = node.time;
-            return max;
-          }, 0);
-          this.literalMapData.nodesData = this.literalMapData.nodesData.map(
-            node => {
-              node.time = Math.round((node.time / this.maxTime) * 100);
-              return node;
-            }
-          );
-          console.log(this.maxTime);
-          // ^ Could be done on backend, this is a hotfix ^
           this.locations = [...this.literalMapData.nodesData];
           this.mapMarkers = [...this.literalMapData.nodesData];
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
@@ -429,18 +415,7 @@ export default {
       if (this.fileToUpload) {
         const reader = new FileReader();
         reader.addEventListener("load", event => {
-          let tmpData = JSON.parse(event.target.result.toString());
-          // v Could be done on backend, this is a hotfix v
-          this.maxTime = tmpData.reduce((max, node) => {
-            if (node.time > max) max = node.time;
-            return max;
-          }, 0);
-          tmpData = tmpData.map(node => {
-            node.time = Math.round((node.time / this.maxTime) * 100);
-            return node;
-          });
-          console.log(this.maxTime);
-          // ^ Could be done on backend, this is a hotfix ^
+          const tmpData = JSON.parse(event.target.result.toString());
           this.marksFromLocations = tmpData.map(node => {
             return node.time;
           });
