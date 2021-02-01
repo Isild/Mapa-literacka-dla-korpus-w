@@ -225,11 +225,10 @@ def get_location(info):
                     sys.exc_info()[0], " ", sys.exc_info()[1],
                     " ", sys.exc_info()[2], " ; ", e)
                 if (i == 0):
-                    print("location not found, falling back to pre-polem location string")
-                    print(line["name"])
+                    print("location " + loc + " not found, falling back to pre-polem location string: " + line["name"])
                     location = geolocator.geocode(line["name"], language="pl, en")
                 else:
-                    print("location not found second time, falling back with faulty cords")
+                    print("location " + loc + " not found second time, falling back with faulty cords")
                     line["coords"] = {
                         "lat": -1,
                         "lng": -1
