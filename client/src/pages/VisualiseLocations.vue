@@ -274,7 +274,7 @@ export default {
       locationsSliderType: "window",
       visibleMarkers: "aaa",
       maxTime: 0,
-      fastPreviewCheck: 0,
+      fastPreviewCheck: true,
       clickedMarkers: "",
       turbo: true
     };
@@ -411,7 +411,7 @@ export default {
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
             return node.time;
           });
-          this.timelineOnOff();
+          if (!fromCoordsUpdate) this.timelineOnOff();
         })
         .catch(err => {
           if (err.response.status === 404) {
@@ -490,10 +490,11 @@ export default {
           location.time <= this.windowSlider[1]
         );
       });
-      this.visibleMarkers = this.mapMarkers.reduce(
-        (s, m) => (s += `${m.time} ${m.name}\n`),
-        ""
-      );
+      this.visibleMarkers = this.mapMarkers
+        .sort((a, b) => {
+          return a.time - b.time;
+        })
+        .reduce((s, m) => (s += `${m.time} ${m.name}\n`), "");
     },
     changeLocationBtn(direction) {
       console.log(direction);
