@@ -57,8 +57,7 @@
           <v-col class="text-center">
             <v-checkbox
               label="Turbo!"
-              :disabled="timelineSwitch"
-              @change="getDataFromServer"
+              :disabled="timelineSwitch || offlineMode"
               v-model="turbo"
             />
           </v-col>
@@ -250,7 +249,7 @@ export default {
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       mapOptions: {
-        zoomSnap: 2
+        zoomSnap: 1
       },
       mapSelectModel: 0,
       literalMapData: {},
@@ -272,11 +271,11 @@ export default {
       marks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
       marksFromLocations: null,
       locationsSliderType: "window",
-      visibleMarkers: "aaa",
-      maxTime: 0,
+      visibleMarkers: "",
       fastPreviewCheck: true,
       clickedMarkers: "",
-      turbo: true
+      turbo: true,
+      offlineMode: false
     };
   },
   watch: {
@@ -296,6 +295,9 @@ export default {
     },
     windowSlider: function() {
       this.updatemapMarkersWindow();
+    },
+    turbo: function() {
+      this.getDataFromServer();
     }
   },
   methods: {
@@ -322,7 +324,7 @@ export default {
           })
           .reduce((s, marker) => {
             const element = JSON.parse(marker._popup._content);
-            return `${s}${element.time}: ${element.name} ${
+            return `${s}${element.time.toFixed(2)}% ${element.name} ${
               element.orth ? `(${element.orth})` : ""
             } \n`;
           }, "");
@@ -331,7 +333,7 @@ export default {
         a.sourceTarget.closePopup();
         console.log(a.sourceTarget._popup._content);
         const element = JSON.parse(a.sourceTarget._popup._content);
-        this.clickedMarkers = `${element.time}: ${element.name} ${
+        this.clickedMarkers = `${element.time.toFixed(2)}% ${element.name} ${
           element.orth ? `(${element.orth})` : ""
         }\n`;
       });
@@ -352,6 +354,7 @@ export default {
       }
     },
     onMapChange(event) {
+      this.offlineMode = false;
       this.$router.push({
         name: "VisualiseLocations",
         params: { id: event[0] }
@@ -370,7 +373,8 @@ export default {
     },
 
     getDataFromServer(fromCoordsUpdate = false) {
-      if (fromCoordsUpdate && this.turbo) return;
+      if ((fromCoordsUpdate && this.turbo) || this.offlineMode) return;
+      console.log("getData");
       let queryParams = {};
       if (this.turbo) {
         queryParams = {
@@ -393,19 +397,6 @@ export default {
           if (this.literalMapData.status !== "ready") {
             this.$router.push({ name: "MapsList" });
           }
-          // v Could be done on backend, this is a hotfix v
-          this.maxTime = this.literalMapData.nodesData.reduce((max, node) => {
-            if (node.time > max) max = node.time;
-            return max;
-          }, 0);
-          this.literalMapData.nodesData = this.literalMapData.nodesData.map(
-            node => {
-              node.time = Math.round((node.time / this.maxTime) * 100);
-              return node;
-            }
-          );
-          console.log(this.maxTime);
-          // ^ Could be done on backend, this is a hotfix ^
           this.locations = [...this.literalMapData.nodesData];
           this.mapMarkers = [...this.literalMapData.nodesData];
           this.marksFromLocations = this.literalMapData.nodesData.map(node => {
@@ -429,23 +420,13 @@ export default {
       if (this.fileToUpload) {
         const reader = new FileReader();
         reader.addEventListener("load", event => {
-          let tmpData = JSON.parse(event.target.result.toString());
-          // v Could be done on backend, this is a hotfix v
-          this.maxTime = tmpData.reduce((max, node) => {
-            if (node.time > max) max = node.time;
-            return max;
-          }, 0);
-          tmpData = tmpData.map(node => {
-            node.time = Math.round((node.time / this.maxTime) * 100);
-            return node;
-          });
-          console.log(this.maxTime);
-          // ^ Could be done on backend, this is a hotfix ^
+          const tmpData = JSON.parse(event.target.result.toString());
           this.marksFromLocations = tmpData.map(node => {
             return node.time;
           });
           this.locations = tmpData;
           this.fileToUpload = null;
+          this.offlineMode = true;
           this.timelineOnOff();
         });
         reader.readAsText(this.fileToUpload, "utf-8");
@@ -476,7 +457,7 @@ export default {
       // One marker per tick
       this.mapMarkers = [this.locations[this.timelineSliderValue]];
       this.map.setView(this.mapMarkers[0].coords);
-      this.clickedMarkers = `${this.mapMarkers[0].time}: ${
+      this.clickedMarkers = `${this.mapMarkers[0].time.toFixed(2)}% ${
         this.mapMarkers[0].name
       } ${this.mapMarkers[0].orth ? `(${this.mapMarkers[0].orth})` : ""}\n`;
       console.log(`Location: ${this.mapMarkers[0].name}`);
@@ -494,7 +475,13 @@ export default {
         .sort((a, b) => {
           return a.time - b.time;
         })
-        .reduce((s, m) => (s += `${m.time} ${m.name}\n`), "");
+        .reduce(
+          (s, m) =>
+            (s += `${m.time.toFixed(2)}% ${m.name} ${
+              m.orth ? `(${m.orth})` : ""
+            }\n`),
+          ""
+        );
     },
     changeLocationBtn(direction) {
       console.log(direction);
