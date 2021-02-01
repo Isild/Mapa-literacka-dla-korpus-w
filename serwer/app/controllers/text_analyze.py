@@ -40,6 +40,9 @@ class TextAnalyze(MethodView):
                 if (maxTime < int(loc['time'])):
                     maxTime = int(loc['time'])
 
+            for loc in locations:
+                loc['time'] = (loc['time']/maxTime)*100
+
             myMap = []
             for i in range(0, 20):
                 row = []
@@ -82,7 +85,7 @@ class TextAnalyze(MethodView):
             newReturnList["maxTime"] = maxTime
 
             if lm is not None:
-                return lm.toJSON()
+                return newReturnList
             else:
                 return abort(404)
         elif request.args.get('timeStart') and request.args.get('timeEnd'):
@@ -116,8 +119,28 @@ class TextAnalyze(MethodView):
             else:
                 return abort(404)
         else:
+            locations = lm.toJSON()['nodesData']
+            maxTime = 0
+            for loc in locations:
+                # print(loc)
+                if (maxTime < int(loc['time'])):
+                    maxTime = int(loc['time'])
+
+            newPointsList =  []
+            for loc in locations:
+                loc['time'] = (loc['time']/maxTime)*100
+                newPointsList.append(loc)
+
+            newReturnList = {}
+            newReturnList["id"] = lmJson['id']
+            newReturnList["nodesData"] = newPointsList
+            newReturnList["name"] = lmJson['name']
+            newReturnList["settings"] = lmJson['settings']
+            newReturnList["status"] = lmJson['status']
+            newReturnList["maxTime"] = maxTime
+
             if lm is not None:
-                return lm.toJSON()
+                return newReturnList
             else:
                 return abort(404)
         return abort(404)
