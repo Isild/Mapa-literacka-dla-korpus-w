@@ -227,7 +227,7 @@ def get_location(info):
                 if (i == 0):
                     print("location not found, falling back to pre-polem location string")
                     print(line["name"])
-                    location = geolocator.geocode(line["name"])
+                    location = geolocator.geocode(line["name"], language="pl, en")
                 else:
                     print("location not found second time, falling back with faulty cords")
                     line["coords"] = {
