@@ -57,7 +57,7 @@
           <v-col class="text-center">
             <v-checkbox
               label="Turbo!"
-              :disabled="timelineSwitch"
+              :disabled="timelineSwitch || offlineMode"
               @change="getDataFromServer"
               v-model="turbo"
             />
@@ -275,7 +275,8 @@ export default {
       visibleMarkers: "aaa",
       fastPreviewCheck: true,
       clickedMarkers: "",
-      turbo: true
+      turbo: true,
+      offlineMode: false
     };
   },
   watch: {
@@ -351,6 +352,7 @@ export default {
       }
     },
     onMapChange(event) {
+      this.offlineMode = false;
       this.$router.push({
         name: "VisualiseLocations",
         params: { id: event[0] }
@@ -369,7 +371,7 @@ export default {
     },
 
     getDataFromServer(fromCoordsUpdate = false) {
-      if (fromCoordsUpdate && this.turbo) return;
+      if ((fromCoordsUpdate && this.turbo) || this.offlineMode) return;
       let queryParams = {};
       if (this.turbo) {
         queryParams = {
@@ -421,6 +423,7 @@ export default {
           });
           this.locations = tmpData;
           this.fileToUpload = null;
+          this.offlineMode = true;
           this.timelineOnOff();
         });
         reader.readAsText(this.fileToUpload, "utf-8");
