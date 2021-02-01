@@ -250,7 +250,7 @@ export default {
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       mapOptions: {
-        zoomSnap: 2
+        zoomSnap: 1
       },
       mapSelectModel: 0,
       literalMapData: {},
